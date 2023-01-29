@@ -96,15 +96,15 @@ class Tower {
     }
 
     public fire() {
-        const projectile = new Projectile(
-            this.engine,
-            this.firingX!,
-            this.firingY!,
-            this.target!,
-            this.towerParam.attackDamage,
-            this.currentPosition
-        )
         setInterval(() => {
+            const projectile = new Projectile(
+                this.engine,
+                this.firingX!,
+                this.firingY!,
+                this.target!,
+                this.towerParam.attackDamage,
+                this.currentPosition
+            )
             this.engine.projectiles?.push(projectile)
             projectile.move()
         }, this.towerParam.attackSpeed)

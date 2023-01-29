@@ -2,6 +2,7 @@ import React, {PropsWithChildren, useEffect, useRef, useState} from 'react';
 import TDEngine from "../engine/TDEngine";
 import Tower from "../towers/Tower";
 import Enemy from "../enemies/Enemy";
+import projectile from "../projectiles/Projectile";
 
 export interface GameProps extends PropsWithChildren {
     engine: TDEngine
@@ -40,6 +41,10 @@ const Game: React.FC<GameProps> = ({engine}) => {
                 tower.fire()
             }
         }))
+
+        engine.projectiles?.forEach((projectile) => {
+            projectile.move()
+        })
 
         engine.requestIdleCallback = requestIdleCallback(gameLoopLogic, {timeout: engine.idleTimeout})
     }
