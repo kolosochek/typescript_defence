@@ -7,12 +7,9 @@ import Map from "../maps/Map";
 
 const GameView = () => {
     const engine = new TDEngine()
+
     // set new map
     engine.map = new Map()
-    // fill towers array
-    engine.towers = [
-        new Tower(engine, {x: 300, y: 80},  )
-    ]
 
     return (
         <Game engine={engine}/>

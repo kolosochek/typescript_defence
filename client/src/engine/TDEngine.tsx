@@ -31,6 +31,7 @@ class TDEngine {
         public requestIdleCallback?: TDEngineI['requestIdleCallback'],
     ) {
         this.idleTimeout = 250;
+        this.projectiles = []
     }
 
     public setContext(context: TDEngineI['context']) {

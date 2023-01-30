@@ -15,12 +15,13 @@ class Enemy {
             width: 6,
             height: 6,
             spaceBetweenEnemies: 15,
-            speed: 1.5
+            speed: 1,
         },
         public randomOffset = {
             x: Math.floor(Math.random() * 10),
             y: Math.floor(Math.random() * 10) + 1,
         },
+        public hp = 100,
     ) {
     }
 
@@ -39,7 +40,7 @@ class Enemy {
 
     public moveRight() {
         // increment x, y is constant
-        this.currentPosition.x += 1 * this.enemyParams.speed
+        this.currentPosition.x += this.enemyParams.speed
 
         // clear prev render
         this.engine.context!.fillRect(this.currentPosition.x - 2, this.currentPosition.y - 1, this.enemyParams.width + 1, this.enemyParams.height + 2)
@@ -56,7 +57,7 @@ class Enemy {
 
     public moveDown() {
         // increment y, x is constant
-        this.currentPosition.y += 1 * this.enemyParams.speed
+        this.currentPosition.y += this.enemyParams.speed
 
         // clear prev render
         this.engine.context!.fillRect(this.currentPosition.x - 1, this.currentPosition.y - 2, this.enemyParams.width + 2, this.enemyParams.height + 1)

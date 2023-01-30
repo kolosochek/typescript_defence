@@ -2,7 +2,6 @@ import React, {PropsWithChildren, useEffect, useRef, useState} from 'react';
 import TDEngine from "../engine/TDEngine";
 import Tower from "../towers/Tower";
 import Enemy from "../enemies/Enemy";
-import projectile from "../projectiles/Projectile";
 
 export interface GameProps extends PropsWithChildren {
     engine: TDEngine
@@ -10,11 +9,12 @@ export interface GameProps extends PropsWithChildren {
 
 const Game: React.FC<GameProps> = ({engine}) => {
     const canvas = useRef<HTMLCanvasElement>(null)
+    const towerOneImage = useRef<HTMLImageElement>(null)
+    const towerTwoImage = useRef<HTMLImageElement>(null)
     const [isGameStarted, setIsGameStarted] = useState<boolean>(false)
 
 
     const gameLoop = () => {
-
         // clear canvas
         engine.context?.clearRect(0, 0, engine.map?.mapParams.width!, engine.map?.mapParams.height!)
 
@@ -31,9 +31,8 @@ const Game: React.FC<GameProps> = ({engine}) => {
         })
 
         // draw projectiles
+
         if (engine.projectiles) {
-            // debug
-            console.log('projectile gotcha!')
             engine.projectiles?.forEach((projectile) => {
                 projectile.move()
             })
@@ -45,7 +44,7 @@ const Game: React.FC<GameProps> = ({engine}) => {
     const gameLoopLogic = () => {
         engine.towers?.forEach((tower => {
             tower.findTarget()
-            if(tower.target){
+            if (tower.target) {
                 // debug
                 console.log(`target is in range && target locked`)
                 tower.findTargetVector()
@@ -58,8 +57,16 @@ const Game: React.FC<GameProps> = ({engine}) => {
 
     useEffect(() => {
         const context = canvas.current?.getContext('2d')
-        // bind context to the engine
+        // bind 2d canvas render context to the engine HoC
         engine.setContext(context!)
+
+        // fill towers array
+        engine.towers = [
+            new Tower(engine, {x: 120, y: 100}, towerOneImage.current),
+            new Tower(engine, {x: 260, y: 220}, towerTwoImage.current),
+            new Tower(engine, {x: 360, y: 220}, towerOneImage.current),
+            new Tower(engine, {x: 340, y: 60}, )
+        ]
 
         // fill enemies array
         const enemiesArray = [
@@ -104,9 +111,31 @@ const Game: React.FC<GameProps> = ({engine}) => {
     return (
         <section>
             <div>
-                <canvas ref={canvas!} id="canvas" width={engine.map?.mapParams.width}
-                        height={engine.map?.mapParams.height}
-                        style={{border: "2px solid green"}}></canvas>
+                <canvas
+                    ref={canvas!}
+                    id="canvas"
+                    width={engine.map?.mapParams.width}
+                    height={engine.map?.mapParams.height}
+                    style={{border: "2px solid green"}}
+                ></canvas>
+            </div>
+            <div className="b-towers-sprite" style={{display: 'none'}}>
+                <img
+                    id="towerOneImage"
+                    alt="towerOneImage sprite"
+                    src="towerOne.svg"
+                    width="20"
+                    height="20"
+                    ref={towerOneImage}
+                />
+                <img
+                    id="towerTwoImage"
+                    alt="towerTwo Image sprite"
+                    src="towerTwo.svg"
+                    width="20"
+                    height="20"
+                    ref={towerTwoImage}
+                />
             </div>
             <div>
                 <button onClick={() => setIsGameStarted(true)}>Start teh game</button>
