@@ -2,6 +2,14 @@ import TDEngine, {twoDCoordinatesI} from "../engine/TDEngine";
 
 export interface EnemyI {
     engine: TDEngine,
+    enemyParams: {
+        width: number,
+        height: number,
+        spaceBetweenEnemies: number,
+        speed: number,
+        bounty: number,
+        strokeStyle: string
+    }
 }
 
 class Enemy {
@@ -17,6 +25,7 @@ class Enemy {
             spaceBetweenEnemies: 15,
             speed: 1,
             bounty: 5,
+            strokeStyle: 'red'
         },
         public randomOffset = {
             x: Math.floor(Math.random() * 10),
@@ -33,8 +42,8 @@ class Enemy {
 
         // draw a 2d representation
         this.engine.context!.beginPath()
+        this.engine.context!.strokeStyle = this.enemyParams.strokeStyle
         this.engine.context!.rect(this.currentPosition.x, this.currentPosition.y, this.enemyParams.width, this.enemyParams.height)
-        this.engine.context!.strokeStyle = 'red'
         this.engine.context!.stroke()
         this.engine.context!.closePath()
     }
@@ -43,34 +52,24 @@ class Enemy {
         // increment x, y is constant
         this.currentPosition.x += this.enemyParams.speed
 
-        // clear prev render
-        this.engine.context!.fillRect(this.currentPosition.x - 2, this.currentPosition.y - 1, this.enemyParams.width + 1, this.enemyParams.height + 2)
-
         // and place a new figure on canvas
         this.engine.context!.beginPath()
+        this.engine.context!.strokeStyle = this.enemyParams.strokeStyle
         this.engine.context!.rect(this.currentPosition.x, this.currentPosition.y, this.enemyParams.width, this.enemyParams.height)
-        this.engine.context!.strokeStyle = 'red'
         this.engine.context!.stroke()
         this.engine.context!.closePath()
-
-        return this.currentPosition
     }
 
     public moveDown() {
         // increment y, x is constant
         this.currentPosition.y += this.enemyParams.speed
 
-        // clear prev render
-        this.engine.context!.fillRect(this.currentPosition.x - 1, this.currentPosition.y - 2, this.enemyParams.width + 2, this.enemyParams.height + 1)
-
         // and place a new figure on canvas
         this.engine.context!.beginPath()
+        this.engine.context!.strokeStyle = this.enemyParams.strokeStyle
         this.engine.context!.rect(this.currentPosition.x, this.currentPosition.y, this.enemyParams.width, this.enemyParams.height)
-        this.engine.context!.strokeStyle = 'red'
         this.engine.context!.stroke()
         this.engine.context!.closePath()
-
-        return this.currentPosition
     }
 
     // enemy movement logic
@@ -94,9 +93,6 @@ class Enemy {
                 }
             }
         }
-
-        // return enemy instance current position {x: number, y: number}
-        return this.currentPosition
     }
 
     public destroy() {

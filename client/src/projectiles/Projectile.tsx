@@ -26,13 +26,13 @@ class Projectile {
             y: 0,
         },
         public projectileParams: ProjectileI['projectileParams'] = {
-            projectileSpeed: 0.05,
+            projectileSpeed: 0.1,
             targetX: 0,
             targetY: 0,
             rectCenterX: 0,
             rectCenterY: 0,
-            width: 2,
-            height: 2,
+            width: 1,
+            height: 1,
         },
         public distanceMoved = 0
     ) {

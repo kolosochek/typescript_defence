@@ -15,23 +15,13 @@ export interface TowerI {
         rectCenterX: number,
         rectCenterY: number,
         firingAngle: number,
+        strokeStyle: string,
     }
-    attackSpeed: number,
-    attackRate: number,
-    attackDamage: number,
-    attackRange: number,
-    firingAngle: number,
-    width: number,
-    height: number,
-    rectCenterX: number,
-    rectCenterY: number,
     image: CanvasImageSource,
 }
 
 class Tower {
     public target?: Enemy | null;
-    public firingX?: number;
-    public firingY?: number;
     public isCanFire? = false;
 
     constructor(
@@ -51,6 +41,7 @@ class Tower {
             rectCenterX: 0,
             rectCenterY: 0,
             firingAngle: 0,
+            strokeStyle: 'red',
         },
     ) {
         this.towerParam.rectCenterX = this.towerParam.width / 2
@@ -88,11 +79,10 @@ class Tower {
         } else {
             this.engine.context.translate(this.currentPosition.x - this.towerParam.rectCenterX, this.currentPosition.y - this.towerParam.rectCenterY);
             this.engine.context.rotate(this.towerParam.firingAngle)
+            this.engine.context.strokeStyle = this.towerParam.strokeStyle
             this.engine.context?.strokeRect(
                 0 - this.towerParam.rectCenterX,
                 0 - this.towerParam.rectCenterY,
-                //this.currentPosition.x,
-                //this.currentPosition.y,
                 this.towerParam.width,
                 this.towerParam.height
             )
@@ -104,8 +94,8 @@ class Tower {
 
     public isEnemyInRange(enemy: Enemy) {
         const distance = (enemy.currentPosition.x - this.currentPosition.x + this.towerParam.width)
-            * (enemy.currentPosition.x - this.currentPosition.x + this.towerParam.rectCenterX)
-            + (enemy.currentPosition.y - this.currentPosition.y + this.towerParam.rectCenterY)
+            * (enemy.currentPosition.x - this.currentPosition.x + this.towerParam.width)
+            + (enemy.currentPosition.y - this.currentPosition.y + this.towerParam.height)
             * (enemy.currentPosition.y - this.currentPosition.y + this.towerParam.height)
         if (distance < (this.towerParam.attackRange * this.towerParam.attackRange)) {
             this.target = enemy
@@ -120,7 +110,10 @@ class Tower {
                 return this.isEnemyInRange(enemy)
             })
         } else {
+            // highlight the target
+            this.target.enemyParams.strokeStyle = 'yellow'
             if (this.target && !this.isEnemyInRange(this.target!)) {
+                this.target.enemyParams.strokeStyle = 'red'
                 this.target = null;
             }
         }
@@ -133,10 +126,7 @@ class Tower {
         }
         const xDistance = this.target.currentPosition.x - this.currentPosition.x;
         const yDistance = this.target.currentPosition.y - this.currentPosition.y;
-        const distance = Math.sqrt((xDistance * xDistance) + (yDistance * yDistance));
         this.towerParam.firingAngle = Math.atan2(yDistance, xDistance) + Math.PI; //* 180 / Math.PI
-        //this.firingX = this.currentPosition.x + this.towerParam.attackRange * xDistance / distance;
-        //this.firingY = this.currentPosition.y + this.towerParam.attackRate * yDistance / distance;
     }
 
     public fire() {

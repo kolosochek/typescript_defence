@@ -23,17 +23,12 @@ const Game: React.FC<GameProps> = ({engine}) => {
 
     const gameLoop = () => {
         if(engine.lives > 0) {
-            // update game results
-            setScore(engine.score)
-            setLives(engine.lives)
-            setMoney(engine.money)
-
-
             // clear canvas
             engine.context?.clearRect(0, 0, engine.map?.mapParams.width!, engine.map?.mapParams.height!)
 
             // draw level map
             engine.map?.drawMap(engine.context!)
+
             // draw towers
             engine.towers?.forEach((tower, index) => {
                 tower.drawTower()
@@ -45,22 +40,29 @@ const Game: React.FC<GameProps> = ({engine}) => {
             })
 
             // draw projectiles
-
             if (engine.projectiles) {
                 engine.projectiles?.forEach((projectile) => {
                     projectile.move()
                 })
             }
 
+            // request animation frame
             engine.animationFrameId = requestAnimationFrame(gameLoop)
         } else {
             // GAME IS OVER!
             setIsGameOver(true)
+            // cancel browser idle callback fn
             cancelIdleCallback(engine.requestIdleCallback)
         }
     }
 
     const gameLoopLogic = () => {
+        // update game results
+        setScore(engine.score)
+        setLives(engine.lives)
+        setMoney(engine.money)
+
+        // search n destroy
         engine.towers?.forEach((tower => {
             tower.findTarget()
             if (tower.target) {
@@ -71,6 +73,7 @@ const Game: React.FC<GameProps> = ({engine}) => {
             }
         }))
 
+        // request callback when browser is idling
         engine.requestIdleCallback = requestIdleCallback(gameLoopLogic, {timeout: engine.idleTimeout})
     }
 
@@ -81,51 +84,13 @@ const Game: React.FC<GameProps> = ({engine}) => {
 
         // fill towers array
         engine.towers = [
-            new Tower(engine, {x: 120, y: 100}, towerOneImage.current),
+            new Tower(engine, {x: 120, y: 80}, towerOneImage.current),
             new Tower(engine, {x: 360, y: 220}, towerOneImage.current),
             new Tower(engine, {x: 340, y: 60}, towerTwoImage.current)
         ]
 
         // fill enemies array
         const enemiesArray = [
-            new Enemy(engine),
-            new Enemy(engine),
-            new Enemy(engine),
-            new Enemy(engine),
-            new Enemy(engine),
-            new Enemy(engine),
-            new Enemy(engine),
-            new Enemy(engine),
-            new Enemy(engine),
-            new Enemy(engine),
-            new Enemy(engine),
-            new Enemy(engine),
-            new Enemy(engine),
-            new Enemy(engine),
-            new Enemy(engine),
-            new Enemy(engine),
-            new Enemy(engine),
-            new Enemy(engine),
-            new Enemy(engine),
-            new Enemy(engine),
-            new Enemy(engine),
-            new Enemy(engine),
-            new Enemy(engine),
-            new Enemy(engine),
-            new Enemy(engine),
-            new Enemy(engine),
-            new Enemy(engine),
-            new Enemy(engine),
-            new Enemy(engine),
-            new Enemy(engine),
-            new Enemy(engine),
-            new Enemy(engine),
-            new Enemy(engine),
-            new Enemy(engine),
-            new Enemy(engine),
-            new Enemy(engine),
-            new Enemy(engine),
-            new Enemy(engine),
             new Enemy(engine),
             new Enemy(engine),
             new Enemy(engine),
