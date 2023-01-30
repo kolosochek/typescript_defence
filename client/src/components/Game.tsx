@@ -4,41 +4,60 @@ import Tower from "../towers/Tower";
 import Enemy from "../enemies/Enemy";
 
 export interface GameProps extends PropsWithChildren {
-    engine: TDEngine
+    engine: TDEngine,
+    lives?: number,
+    score?: number,
+    money?: number,
 }
 
 const Game: React.FC<GameProps> = ({engine}) => {
     const canvas = useRef<HTMLCanvasElement>(null)
     const towerOneImage = useRef<HTMLImageElement>(null)
     const towerTwoImage = useRef<HTMLImageElement>(null)
+    const [lives, setLives] = useState<GameProps["lives"]>(10)
+    const [score, setScore] = useState<GameProps["score"]>(0)
+    const [money, setMoney] = useState<GameProps["money"]>(100)
+    const [isGameOver, setIsGameOver] = useState<boolean>(false)
     const [isGameStarted, setIsGameStarted] = useState<boolean>(false)
 
 
     const gameLoop = () => {
-        // clear canvas
-        engine.context?.clearRect(0, 0, engine.map?.mapParams.width!, engine.map?.mapParams.height!)
+        if(engine.lives > 0) {
+            // update game results
+            setScore(engine.score)
+            setLives(engine.lives)
+            setMoney(engine.money)
 
-        // draw level map
-        engine.map?.drawMap(engine.context!)
-        // draw towers
-        engine.towers?.forEach((tower, index) => {
-            tower.drawTower()
-        })
 
-        // draw enemies
-        engine.enemies?.forEach((enemy, index) => {
-            enemy.move()
-        })
+            // clear canvas
+            engine.context?.clearRect(0, 0, engine.map?.mapParams.width!, engine.map?.mapParams.height!)
 
-        // draw projectiles
-
-        if (engine.projectiles) {
-            engine.projectiles?.forEach((projectile) => {
-                projectile.move()
+            // draw level map
+            engine.map?.drawMap(engine.context!)
+            // draw towers
+            engine.towers?.forEach((tower, index) => {
+                tower.drawTower()
             })
-        }
 
-        engine.animationFrameId = requestAnimationFrame(gameLoop)
+            // draw enemies
+            engine.enemies?.forEach((enemy, index) => {
+                enemy.move()
+            })
+
+            // draw projectiles
+
+            if (engine.projectiles) {
+                engine.projectiles?.forEach((projectile) => {
+                    projectile.move()
+                })
+            }
+
+            engine.animationFrameId = requestAnimationFrame(gameLoop)
+        } else {
+            // GAME IS OVER!
+            setIsGameOver(true)
+            cancelIdleCallback(engine.requestIdleCallback)
+        }
     }
 
     const gameLoopLogic = () => {
@@ -63,13 +82,75 @@ const Game: React.FC<GameProps> = ({engine}) => {
         // fill towers array
         engine.towers = [
             new Tower(engine, {x: 120, y: 100}, towerOneImage.current),
-            new Tower(engine, {x: 260, y: 220}, towerTwoImage.current),
             new Tower(engine, {x: 360, y: 220}, towerOneImage.current),
-            new Tower(engine, {x: 340, y: 60}, )
+            new Tower(engine, {x: 340, y: 60}, towerTwoImage.current)
         ]
 
         // fill enemies array
         const enemiesArray = [
+            new Enemy(engine),
+            new Enemy(engine),
+            new Enemy(engine),
+            new Enemy(engine),
+            new Enemy(engine),
+            new Enemy(engine),
+            new Enemy(engine),
+            new Enemy(engine),
+            new Enemy(engine),
+            new Enemy(engine),
+            new Enemy(engine),
+            new Enemy(engine),
+            new Enemy(engine),
+            new Enemy(engine),
+            new Enemy(engine),
+            new Enemy(engine),
+            new Enemy(engine),
+            new Enemy(engine),
+            new Enemy(engine),
+            new Enemy(engine),
+            new Enemy(engine),
+            new Enemy(engine),
+            new Enemy(engine),
+            new Enemy(engine),
+            new Enemy(engine),
+            new Enemy(engine),
+            new Enemy(engine),
+            new Enemy(engine),
+            new Enemy(engine),
+            new Enemy(engine),
+            new Enemy(engine),
+            new Enemy(engine),
+            new Enemy(engine),
+            new Enemy(engine),
+            new Enemy(engine),
+            new Enemy(engine),
+            new Enemy(engine),
+            new Enemy(engine),
+            new Enemy(engine),
+            new Enemy(engine),
+            new Enemy(engine),
+            new Enemy(engine),
+            new Enemy(engine),
+            new Enemy(engine),
+            new Enemy(engine),
+            new Enemy(engine),
+            new Enemy(engine),
+            new Enemy(engine),
+            new Enemy(engine),
+            new Enemy(engine),
+            new Enemy(engine),
+            new Enemy(engine),
+            new Enemy(engine),
+            new Enemy(engine),
+            new Enemy(engine),
+            new Enemy(engine),
+            new Enemy(engine),
+            new Enemy(engine),
+            new Enemy(engine),
+            new Enemy(engine),
+            new Enemy(engine),
+            new Enemy(engine),
+            new Enemy(engine),
             new Enemy(engine),
             new Enemy(engine),
             new Enemy(engine),
@@ -136,6 +217,16 @@ const Game: React.FC<GameProps> = ({engine}) => {
                     height="20"
                     ref={towerTwoImage}
                 />
+            </div>
+            {isGameOver && (
+                <h1>GAME IS OVER!</h1>
+            )}
+            <div>
+                <p>
+                    <span>{`Lives left: ${lives}`}</span>&nbsp;
+                    <span>{`Killed enemies: ${score}`}</span>&nbsp;
+                    <span>{`Money: $${money}`}</span>
+                </p>
             </div>
             <div>
                 <button onClick={() => setIsGameStarted(true)}>Start teh game</button>

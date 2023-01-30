@@ -16,6 +16,7 @@ class Enemy {
             height: 6,
             spaceBetweenEnemies: 15,
             speed: 1,
+            bounty: 5,
         },
         public randomOffset = {
             x: Math.floor(Math.random() * 10),
@@ -87,8 +88,9 @@ class Enemy {
                     this.moveRight()
                 } else {
                     // delete enemies that are out of map borders
-                    // @ts-ignore
-                    delete(this)
+                    this.destroy()
+                    // decrement life quantity
+                    this.engine.lives -= 1;
                 }
             }
         }
@@ -97,6 +99,9 @@ class Enemy {
         return this.currentPosition
     }
 
+    public destroy() {
+        this.engine.enemies = this.engine.enemies.filter((enemy) => this !== enemy)
+    }
 }
 
 export default Enemy;

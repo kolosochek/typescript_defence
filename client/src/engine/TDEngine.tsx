@@ -17,6 +17,9 @@ export interface TDEngineI {
     animationFrameId?: number,
     requestIdleCallback: number,
     twoDCoordinates: twoDCoordinatesI,
+    lives: number,
+    score: number,
+    money: number,
 }
 
 class TDEngine {
@@ -29,6 +32,9 @@ class TDEngine {
         public idleTimeout?: number,
         public animationFrameId?: TDEngineI['animationFrameId'],
         public requestIdleCallback?: TDEngineI['requestIdleCallback'],
+        public lives: TDEngineI["lives"] = 10,
+        public score: TDEngineI["score"] = 0,
+        public money: TDEngineI["money"] = 100,
     ) {
         this.idleTimeout = 250;
         this.projectiles = []

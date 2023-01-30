@@ -20,7 +20,7 @@ class Projectile {
         public engine: ProjectileI['engine'],
         public target: Enemy,
         public tower: Tower,
-        public damage: TowerI['towerParam']['attackDamage'] = 30,
+        public damage: TowerI['towerParam']['attackDamage'],
         public currentPosition: twoDCoordinatesI = {
             x: 0,
             y: 0,
@@ -60,12 +60,10 @@ class Projectile {
 
         // if projectile out of map borders, then delete it
         if (this.currentPosition.x > this.engine.map.mapParams.width) {
-            // @ts-ignore
-            delete(this)
+            this.destroy()
         }
         if (this.currentPosition.y > this.engine.map.mapParams.height) {
-            // @ts-ignore
-            delete(this)
+            this.destroy()
         }
     }
 
@@ -77,24 +75,33 @@ class Projectile {
 
         if (distanceToTarget < this.distanceMoved) {
             // collision
-            if (this.target.hp > 0){
+            // debug
+            console.log(this.target.hp)
+            console.log(`this.target.hp`)
+            //
+            if (this.target.hp > 0) {
                 this.target.hp -= this.damage;
-                this.destroy()
             } else {
+                // release tower target
+                this.tower.target = null
                 // target is dead
-                //delete(this.target)
+                this.target.destroy()
+                // increment score when enemy died(is destroyed)
+                this.engine.score += 1;
+                // increment money due to target bounty
+                this.engine.money += this.target.enemyParams.bounty
             }
-            this.currentPosition.x = this.target.currentPosition.x + this.projectileParams.rectCenterX;
-            this.currentPosition.y = this.target.currentPosition.y + this.projectileParams.rectCenterY;
+            this.destroy()
+            //this.currentPosition.x = this.target.currentPosition.x + this.projectileParams.rectCenterX;
+            //this.currentPosition.y = this.target.currentPosition.y + this.projectileParams.rectCenterY;
         } else {
             this.currentPosition.x = this.currentPosition.x + this.distanceMoved * xDistance / distanceToTarget;
             this.currentPosition.y = this.currentPosition.y + this.distanceMoved * yDistance / distanceToTarget;
         }
     }
 
-    public destroy(){
-        // @ts-ignore
-        delete(this)
+    public destroy() {
+        this.engine.projectiles = this.engine.projectiles.filter((projectile) => this !== projectile)
     }
 
 }

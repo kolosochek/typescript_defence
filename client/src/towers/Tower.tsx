@@ -43,8 +43,8 @@ class Tower {
         public image?: TowerI['image'],
         public towerParam: TowerI['towerParam'] = {
             attackSpeed: 100,
-            attackRate: 1000,
-            attackDamage: 100,
+            attackRate: 500,
+            attackDamage: 30,
             attackRange: 80,
             width: 20,
             height: 20,
