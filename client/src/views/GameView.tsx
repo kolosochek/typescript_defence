@@ -11,7 +11,7 @@ const GameView = () => {
     engine.map = new Map()
     // fill towers array
     engine.towers = [
-        new Tower(engine, {x: 320, y: 200})
+        new Tower(engine, {x: 300, y: 80},  )
     ]
 
     return (

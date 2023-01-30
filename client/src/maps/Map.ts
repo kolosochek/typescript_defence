@@ -25,7 +25,7 @@ class Map {
 
         context.beginPath()
         context.fillStyle = 'green'
-        // first line
+        // first right line
         context.rect(
             mapParams.startX,
             mapParams.startY,

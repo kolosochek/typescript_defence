@@ -52,6 +52,10 @@ class TDEngine {
     public setProjectiles(projectiles: TDEngineI['projectiles']) {
         this.projectiles = projectiles
     }
+
+    public pushProjectile(projectile: Projectile) {
+        this.projectiles?.push(projectile)
+    }
 }
 
 export default TDEngine

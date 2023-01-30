@@ -7,11 +7,6 @@ export interface EnemyI {
 class Enemy {
     constructor(
         public engine: EnemyI['engine'],
-        public isMoving: boolean = false,
-        public randomOffset = {
-            x: Math.floor(Math.random() * 10),
-            y: Math.floor(Math.random() * 10) + 1,
-        },
         public currentPosition: twoDCoordinatesI = {
             x: 0,
             y: 0,
@@ -20,7 +15,11 @@ class Enemy {
             width: 6,
             height: 6,
             spaceBetweenEnemies: 15,
-            speed: 0.85
+            speed: 1.5
+        },
+        public randomOffset = {
+            x: Math.floor(Math.random() * 10),
+            y: Math.floor(Math.random() * 10) + 1,
         },
     ) {
     }
@@ -72,8 +71,8 @@ class Enemy {
         return this.currentPosition
     }
 
+    // enemy movement logic
     public move() {
-
         // moving right and then
         if (this.currentPosition.x <= this.engine.map?.mapParams.rightBorder! + this.randomOffset.x) {
             this.moveRight()
@@ -86,6 +85,9 @@ class Enemy {
                 if (this.currentPosition.x <= this.engine.map?.mapParams.width! + this.randomOffset.x) {
                     this.moveRight()
                 } else {
+                    // delete enemies that are out of map borders
+                    // @ts-ignore
+                    delete(this)
                 }
             }
         }
@@ -93,6 +95,7 @@ class Enemy {
         // return enemy instance current position {x: number, y: number}
         return this.currentPosition
     }
+
 }
 
 export default Enemy;

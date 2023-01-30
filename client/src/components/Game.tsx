@@ -30,25 +30,31 @@ const Game: React.FC<GameProps> = ({engine}) => {
             enemy.move()
         })
 
+        // draw projectiles
+        if (engine.projectiles) {
+            // debug
+            console.log('projectile gotcha!')
+            engine.projectiles?.forEach((projectile) => {
+                projectile.move()
+            })
+        }
+
         engine.animationFrameId = requestAnimationFrame(gameLoop)
     }
 
     const gameLoopLogic = () => {
         engine.towers?.forEach((tower => {
             tower.findTarget()
-            if (tower.target) {
+            if(tower.target){
+                // debug
+                console.log(`target is in range && target locked`)
                 tower.findTargetVector()
                 tower.fire()
             }
         }))
 
-        engine.projectiles?.forEach((projectile) => {
-            projectile.move()
-        })
-
         engine.requestIdleCallback = requestIdleCallback(gameLoopLogic, {timeout: engine.idleTimeout})
     }
-
 
     useEffect(() => {
         const context = canvas.current?.getContext('2d')
@@ -57,8 +63,6 @@ const Game: React.FC<GameProps> = ({engine}) => {
 
         // fill enemies array
         const enemiesArray = [
-            new Enemy(engine),
-            new Enemy(engine),
             new Enemy(engine),
             new Enemy(engine),
             new Enemy(engine),
@@ -83,9 +87,20 @@ const Game: React.FC<GameProps> = ({engine}) => {
         if (isGameStarted) {
             engine.animationFrameId = requestAnimationFrame(gameLoop)
             engine.requestIdleCallback = requestIdleCallback(gameLoopLogic, {timeout: engine.idleTimeout})
+            setTimeout(() => {
+                engine.enemies = [...engine.enemies,
+                    new Enemy(engine, {x: 0, y: 50}),
+                    new Enemy(engine, {x: -14, y: 52})]
+            }, 3000)
+            setTimeout(() => {
+                engine.enemies = [...engine.enemies,
+                    new Enemy(engine, {x: 0, y: 50}),]
+            }, 5000)
         }
 
     }, [isGameStarted])
+
+
     return (
         <section>
             <div>
