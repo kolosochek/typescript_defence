@@ -100,23 +100,20 @@ class Projectile {
 
     public collision() {
         this.destroy()
-        if (this.target.hp > 0) {
-            this.target.hp -= this.damage;
+        if ((this.target.hp) > 0 && (this.engine.enemies.indexOf(this.target) > -1)) {
             // debug
-            console.log(this.target.hp)
-            console.log(`this.target.hp`)
-            //
-        } else {
+            //console.log(`this.target.hp`)
+            //console.log(this.target.hp)
+            this.target.hp -= this.damage;
+        } else if((this.target.hp <= 0) && (this.engine.enemies.indexOf(this.target) > -1) ) {
             // target is dead
-            const isTargetDead = true
-            if(this.target) {
-                this.target.destroy()
-                // release tower target
-                this.tower.target = null
-                // release projectile target
-                this.target = null
-            }
-
+            // release tower target
+            this.engine.projectiles.filter(projectile => this.target === projectile.target)
+            this.tower.target = null
+            // destroy projectile target
+            this.target.destroy()
+        } else if(this.target.hp <= 0){
+            this.tower.target = null
         }
         //this.currentPosition.x = this.target.currentPosition.x + this.projectileParams.rectCenterX;
         //this.currentPosition.y = this.target.currentPosition.y + this.projectileParams.rectCenterY;

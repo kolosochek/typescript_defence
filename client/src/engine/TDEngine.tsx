@@ -1,5 +1,5 @@
 import Enemy, {EnemyI} from "../enemies/Enemy";
-import Tower from "../towers/Tower";
+import Tower, {TowerI} from "../towers/Tower";
 import Map from "../maps/Map";
 import Projectile from "../projectiles/Projectile";
 
@@ -22,8 +22,9 @@ export interface TDEngineI {
     money: number,
     isCanBuild: boolean,
     isGameStarted: boolean,
-    canvasMouseMoveEvent:EventListener | null,
-    draftTower:Tower | null,
+    canvasMouseMoveEvent: EventListener | null,
+    draftTower: Tower | null,
+    cursorPosition: twoDCoordinatesI,
 }
 
 class TDEngine {
@@ -39,29 +40,62 @@ class TDEngine {
         public lives: TDEngineI["lives"] = 10,
         public score: TDEngineI["score"] = 0,
         public money: TDEngineI["money"] = 100,
-        public isCanBuild:TDEngineI["isCanBuild"] = false,
-        public isGameStarted:TDEngineI["isGameStarted"] = false,
-        public canvasMouseMoveEvent:TDEngineI["canvasMouseMoveEvent"] = null,
-        public draftTower:TDEngineI["draftTower"] = null
+        public isCanBuild: TDEngineI["isCanBuild"] = false,
+        public isGameStarted: TDEngineI["isGameStarted"] = false,
+        public draftTower: TDEngineI["draftTower"] = null,
+        public levelOneTowerParam: TowerI["towerParam"] = {
+            projectileSpeed: 100,
+            attackRate: 1000,
+            attackDamage: 30,
+            attackRange: 120,
+            width: 40,
+            height: 40,
+            rectCenterX: 0,
+            rectCenterY: 0,
+            strokeStyle: 'red',
+            firingAngle: 0,
+            firingX: 0,
+            firingY: 0,
+            price: 25,
+        },
+        public levelTwoTowerParam: TowerI["towerParam"] = {
+            projectileSpeed: 50,
+            attackRate: 300,
+            attackDamage: 20,
+            attackRange: 60,
+            width: 40,
+            height: 40,
+            rectCenterX: 0,
+            rectCenterY: 0,
+            strokeStyle: 'red',
+            firingAngle: 0,
+            firingX: 0,
+            firingY: 0,
+            price: 45,
+        },
+        public cursorPosition: TDEngineI['cursorPosition'] = {x: 0, y: 0}
     ) {
         this.idleTimeout = 250;
     }
 
-    public draftShowTower(currentPosition:twoDCoordinatesI){
-        if(this.isCanBuild){
+    public draftShowTower(currentPosition: twoDCoordinatesI) {
+        this.cursorPosition = currentPosition
+
+        if (this.isCanBuild) {
             console.log(`isCanBuild ${currentPosition.x}:${currentPosition.y}`)
             if (!this.draftTower) {
                 this.draftTower = new Tower(this, undefined, undefined, {x: currentPosition.x, y: currentPosition.y})
             } else {
                 this.draftTower.currentPosition = currentPosition
             }
-            //this.draftTower.draftBuildTower()
         }
     }
 
-    public draftBuildTower(currentPosition:twoDCoordinatesI){
-        if(this.isCanBuild){
-            console.log(`draftBuildTower ${currentPosition.x}:${currentPosition.y}`)
+    public draftBuildTower(currentPosition: twoDCoordinatesI) {
+        if (this.isCanBuild && this.money >= this.draftTower.towerParam.price) {
+            // debug
+            //console.log(`draftBuildTower ${currentPosition.x}:${currentPosition.y}`)
+            //
             if (!this.draftTower) {
                 this.draftTower = new Tower(this, undefined, undefined, {x: currentPosition.x, y: currentPosition.y})
             } else {
@@ -73,10 +107,12 @@ class TDEngine {
             ]
             // disable building mode
             this.isCanBuild = false;
+            this.money -= this.draftTower.towerParam.price
             this.draftTower = null;
         }
     }
-    public clearCanvas(){
+
+    public clearCanvas() {
         // clear canvas
         this.context?.clearRect(0, 0, this.map?.mapParams.width!, this.map?.mapParams.height!)
     }
@@ -103,6 +139,13 @@ class TDEngine {
 
     public pushProjectile(projectile: Projectile) {
         this.projectiles?.push(projectile)
+    }
+
+    public get towerOneParam(){
+        return JSON.parse(JSON.stringify(this.levelOneTowerParam))
+    }
+    public get towerTwoParam(){
+        return JSON.parse(JSON.stringify(this.levelTwoTowerParam))
     }
 }
 

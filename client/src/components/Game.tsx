@@ -9,6 +9,8 @@ export interface GameProps extends PropsWithChildren {
     score?: number,
     money?: number,
     isBuildMode?: boolean,
+    isEnoughMoney?: boolean,
+
 }
 
 const Game: React.FC<GameProps> = ({engine}) => {
@@ -20,10 +22,12 @@ const Game: React.FC<GameProps> = ({engine}) => {
     const enemyOneImage = useRef<HTMLImageElement>(null)
     // projectile sprite img
     const projectileOneImage = useRef<HTMLImageElement>(null)
+    const projectileTwoImage = useRef<HTMLImageElement>(null)
     // game status params
     const [lives, setLives] = useState<GameProps["lives"]>(10)
     const [score, setScore] = useState<GameProps["score"]>(0)
     const [money, setMoney] = useState<GameProps["money"]>(100)
+    const [isEnoughMoney, setIsEnoughMoney] = useState<GameProps["isEnoughMoney"]>(false)
     const [isBuildMode, setIsBuildMode] = useState<GameProps["isBuildMode"]>(false)
     const [isGameOver, setIsGameOver] = useState<boolean>(false)
     const [isGameStarted, setIsGameStarted] = useState<boolean>(false)
@@ -181,7 +185,7 @@ const Game: React.FC<GameProps> = ({engine}) => {
             engine.requestIdleCallback = requestIdleCallback(gameLoopLogic, {timeout: engine.idleTimeout})
         }
 
-    }, [isGameStarted, isBuildMode])
+    }, [isGameStarted])
 
 
     return (
@@ -224,6 +228,12 @@ const Game: React.FC<GameProps> = ({engine}) => {
                     src="projectileOne.svg"
                     ref={projectileOneImage}
                 />
+                <img
+                    id="projectileTwoImage"
+                    alt="projectileTwoImage sprite"
+                    src="projectileTwo.svg"
+                    ref={projectileTwoImage}
+                />
             </div>
             {isGameOver && (
                 <h1>GAME IS OVER!</h1>
@@ -232,25 +242,32 @@ const Game: React.FC<GameProps> = ({engine}) => {
                 <p>
                     <span>{`Lives left: ${lives}`}</span>&nbsp;
                     <span>{`Killed enemies: ${score}`}</span>&nbsp;
-                    <span>{`Money: $${money}`}</span>
+                    <span style={{color: `${isEnoughMoney ? 'red' : ''}`}}>{`Money: $${money}`}</span>
                 </p>
             </div>
             <div>
                 <button onClick={() => setIsGameStarted(true)}>Start teh game</button>
                 <button onClick={() => setIsGameStarted(false)}>End teh game</button>
                 <button onClick={() => {
-                    //setIsBuildMode(true)
-                    engine.isCanBuild = true
-                    engine.draftTower = new Tower(engine, towerOneImage.current, projectileOneImage.current, {x: 0, y: 0})
-                }}>Build 1 level tower
+                    if(money >= engine.levelOneTowerParam.price) {
+                        setIsEnoughMoney(false)
+                        engine.isCanBuild = true
+                        engine.draftTower = new Tower(engine, towerOneImage.current, projectileOneImage.current, engine.cursorPosition, engine.towerOneParam)
+                    } else {
+                        setIsEnoughMoney(true)
+                    }
+                }}>Build 1 level tower( $25 )
                 </button>
                 <button onClick={() => {
-                    //setIsBuildMode(true)
-                    engine.isCanBuild = true
-                    engine.draftTower = new Tower(engine, towerTwoImage.current, projectileOneImage.current, {x: 0, y: 0})
-                }}>Build 2 level tower
+                    if(money >= engine.levelTwoTowerParam.price) {
+                        setIsEnoughMoney(false)
+                        engine.isCanBuild = true
+                        engine.draftTower = new Tower(engine, towerTwoImage.current, projectileTwoImage.current, engine.cursorPosition, engine.towerTwoParam)
+                    } else {
+                        setIsEnoughMoney(true)
+                    }
+                }}>Build 2 level tower( $45 )
                 </button>
-                <button onClick={() => setIsBuildMode(false)}>Build mode OFF</button>
             </div>
         </section>
     )

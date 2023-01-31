@@ -27,7 +27,7 @@ class Enemy {
             width: 20,
             height: 20,
             spaceBetweenEnemies: 35,
-            speed: 0.5,
+            speed: 0.62,
             bounty: 5,
             strokeStyle: 'red',
             rectCenterX: 0,
@@ -106,6 +106,7 @@ class Enemy {
     public destroy() {
         this.engine.enemies = this.engine.enemies.filter((enemy) => this !== enemy)
         this.engine.score += 1
+        this.engine.money += this.enemyParams.bounty
     }
 }
 
