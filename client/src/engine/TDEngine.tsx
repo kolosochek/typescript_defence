@@ -20,14 +20,18 @@ export interface TDEngineI {
     lives: number,
     score: number,
     money: number,
+    isCanBuild: boolean,
+    isGameStarted: boolean,
+    canvasMouseMoveEvent:EventListener | null,
+    draftTower:Tower | null,
 }
 
 class TDEngine {
     constructor(
         public context?: TDEngineI['context'],
-        public enemies?: TDEngineI['enemies'],
-        public towers?: TDEngineI['towers'],
-        public projectiles?: TDEngineI['projectiles'],
+        public enemies: TDEngineI['enemies'] = [],
+        public towers: TDEngineI['towers'] = [],
+        public projectiles: TDEngineI['projectiles'] = [],
         public map?: TDEngineI['map'],
         public idleTimeout?: number,
         public animationFrameId?: TDEngineI['animationFrameId'],
@@ -35,9 +39,46 @@ class TDEngine {
         public lives: TDEngineI["lives"] = 10,
         public score: TDEngineI["score"] = 0,
         public money: TDEngineI["money"] = 100,
+        public isCanBuild:TDEngineI["isCanBuild"] = false,
+        public isGameStarted:TDEngineI["isGameStarted"] = false,
+        public canvasMouseMoveEvent:TDEngineI["canvasMouseMoveEvent"] = null,
+        public draftTower:TDEngineI["draftTower"] = null
     ) {
         this.idleTimeout = 250;
-        this.projectiles = []
+    }
+
+    public draftShowTower(currentPosition:twoDCoordinatesI){
+        if(this.isCanBuild){
+            console.log(`isCanBuild ${currentPosition.x}:${currentPosition.y}`)
+            if (!this.draftTower) {
+                this.draftTower = new Tower(this, undefined, undefined, {x: currentPosition.x, y: currentPosition.y})
+            } else {
+                this.draftTower.currentPosition = currentPosition
+            }
+            //this.draftTower.draftBuildTower()
+        }
+    }
+
+    public draftBuildTower(currentPosition:twoDCoordinatesI){
+        if(this.isCanBuild){
+            console.log(`draftBuildTower ${currentPosition.x}:${currentPosition.y}`)
+            if (!this.draftTower) {
+                this.draftTower = new Tower(this, undefined, undefined, {x: currentPosition.x, y: currentPosition.y})
+            } else {
+                this.draftTower.currentPosition = currentPosition
+            }
+            this.towers = [
+                ...this.towers,
+                this.draftTower
+            ]
+            // disable building mode
+            this.isCanBuild = false;
+            this.draftTower = null;
+        }
+    }
+    public clearCanvas(){
+        // clear canvas
+        this.context?.clearRect(0, 0, this.map?.mapParams.width!, this.map?.mapParams.height!)
     }
 
     public setContext(context: TDEngineI['context']) {

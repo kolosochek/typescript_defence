@@ -8,23 +8,30 @@ export interface GameProps extends PropsWithChildren {
     lives?: number,
     score?: number,
     money?: number,
+    isBuildMode?: boolean,
 }
 
 const Game: React.FC<GameProps> = ({engine}) => {
     const canvas = useRef<HTMLCanvasElement>(null)
+    // tower sprite img
     const towerOneImage = useRef<HTMLImageElement>(null)
     const towerTwoImage = useRef<HTMLImageElement>(null)
+    // enemy sprite img
+    const enemyOneImage = useRef<HTMLImageElement>(null)
+    // projectile sprite img
+    const projectileOneImage = useRef<HTMLImageElement>(null)
+    // game status params
     const [lives, setLives] = useState<GameProps["lives"]>(10)
     const [score, setScore] = useState<GameProps["score"]>(0)
     const [money, setMoney] = useState<GameProps["money"]>(100)
+    const [isBuildMode, setIsBuildMode] = useState<GameProps["isBuildMode"]>(false)
     const [isGameOver, setIsGameOver] = useState<boolean>(false)
     const [isGameStarted, setIsGameStarted] = useState<boolean>(false)
 
 
     const gameLoop = () => {
-        if(engine.lives > 0) {
-            // clear canvas
-            engine.context?.clearRect(0, 0, engine.map?.mapParams.width!, engine.map?.mapParams.height!)
+        if (engine.lives > 0) {
+            engine.clearCanvas()
 
             // draw level map
             engine.map?.drawMap(engine.context!)
@@ -34,16 +41,28 @@ const Game: React.FC<GameProps> = ({engine}) => {
                 tower.drawTower()
             })
 
-            // draw enemies
-            engine.enemies?.forEach((enemy, index) => {
-                enemy.move()
-            })
+            // build mode
+            if (engine.isCanBuild) {
+                if(engine.draftTower) {
+                    engine.draftTower.draftBuildTower()
+                }
+            }
 
-            // draw projectiles
-            if (engine.projectiles) {
-                engine.projectiles?.forEach((projectile) => {
-                    projectile.move()
+            if (isGameStarted) {
+                engine.isGameStarted = true
+                // draw enemies
+                engine.enemies?.forEach((enemy, index) => {
+                    enemy.move()
                 })
+
+                // draw projectiles
+                if (engine.projectiles) {
+                    engine.projectiles?.forEach((projectile) => {
+                        projectile.move()
+                    })
+                }
+            } else {
+                engine.isGameStarted = false
             }
 
             // request animation frame
@@ -62,16 +81,24 @@ const Game: React.FC<GameProps> = ({engine}) => {
         setLives(engine.lives)
         setMoney(engine.money)
 
+
         // search n destroy
         engine.towers?.forEach((tower => {
             tower.findTarget()
             if (tower.target) {
-                // debug
-                console.log(`target is in range && target locked`)
                 tower.findTargetVector()
                 tower.fire()
             }
         }))
+
+        // destroy projectiles without target
+        if (engine.projectiles) {
+            engine.projectiles?.forEach((projectile) => {
+                if (projectile.tower.target === null) {
+                    engine.projectiles.filter(proj => projectile !== proj)
+                }
+            })
+        }
 
         // request callback when browser is idling
         engine.requestIdleCallback = requestIdleCallback(gameLoopLogic, {timeout: engine.idleTimeout})
@@ -82,46 +109,58 @@ const Game: React.FC<GameProps> = ({engine}) => {
         // bind 2d canvas render context to the engine HoC
         engine.setContext(context!)
 
+        /* BUILD MODE */
+
+        // add canvas mousemove event listener
+        canvas.current.addEventListener('mousemove', (e: MouseEvent) => {
+            engine.draftShowTower({x: e.pageX, y: e.pageY})
+        })
+
+        canvas.current.addEventListener('click', (e: MouseEvent) => {
+            engine.draftBuildTower({x: e.pageX, y: e.pageY})
+        })
+
+        // add canvas mouse click event listener
+
+        /*
+        canvas.current.addEventListener('click', (e: MouseEvent) => {
+            if(isBuildMode) {
+                // debug
+                console.log(`CLICK! mouseXY: ${e.pageX}:${e.pageY}`)
+                //
+                engine.towers = [
+                    ...engine.towers,
+                    new Tower(engine, towerOneImage.current, projectileOneImage.current, {x: e.pageX, y: e.pageY}),
+                ]
+            } else {
+                engine.isCanBuild = false
+            }
+        })
+
+
+
+        /* /BUILD MODE */
+
         // fill towers array
-        engine.towers = [
-            new Tower(engine, {x: 120, y: 80}, towerOneImage.current),
-            new Tower(engine, {x: 360, y: 220}, towerOneImage.current),
-            new Tower(engine, {x: 340, y: 60}, towerTwoImage.current)
-        ]
+        //engine.towers = [
+        //    new Tower(engine, towerOneImage.current, projectileOneImage.current, {x: 140, y: 200} ),
+        //new Tower(engine, towerOneImage.current, {x: 360, y: 220}),
+        //new Tower(engine, towerTwoImage.current, {x: 340, y: 60}),
+        //]
 
         // fill enemies array
         const enemiesArray = [
-            new Enemy(engine),
-            new Enemy(engine),
-            new Enemy(engine),
-            new Enemy(engine),
-            new Enemy(engine),
-            new Enemy(engine),
-            new Enemy(engine),
-            new Enemy(engine),
-            new Enemy(engine),
-            new Enemy(engine),
-            new Enemy(engine),
-            new Enemy(engine),
-            new Enemy(engine),
-            new Enemy(engine),
-            new Enemy(engine),
-            new Enemy(engine),
-            new Enemy(engine),
-            new Enemy(engine),
-            new Enemy(engine),
-            new Enemy(engine),
-            new Enemy(engine),
-            new Enemy(engine),
-            new Enemy(engine),
-            new Enemy(engine),
-            new Enemy(engine),
-            new Enemy(engine),
-            new Enemy(engine),
-            new Enemy(engine),
-            new Enemy(engine),
-            new Enemy(engine),
-            new Enemy(engine),
+            new Enemy(engine, enemyOneImage.current),
+            new Enemy(engine, enemyOneImage.current),
+            new Enemy(engine, enemyOneImage.current),
+            new Enemy(engine, enemyOneImage.current),
+            new Enemy(engine, enemyOneImage.current),
+            new Enemy(engine, enemyOneImage.current),
+            new Enemy(engine, enemyOneImage.current),
+            new Enemy(engine, enemyOneImage.current),
+            new Enemy(engine, enemyOneImage.current),
+            new Enemy(engine, enemyOneImage.current),
+            new Enemy(engine, enemyOneImage.current),
         ]
         engine.setEnemies(enemiesArray)
 
@@ -140,18 +179,9 @@ const Game: React.FC<GameProps> = ({engine}) => {
         if (isGameStarted) {
             engine.animationFrameId = requestAnimationFrame(gameLoop)
             engine.requestIdleCallback = requestIdleCallback(gameLoopLogic, {timeout: engine.idleTimeout})
-            setTimeout(() => {
-                engine.enemies = [...engine.enemies,
-                    new Enemy(engine, {x: 0, y: 50}),
-                    new Enemy(engine, {x: -14, y: 52})]
-            }, 3000)
-            setTimeout(() => {
-                engine.enemies = [...engine.enemies,
-                    new Enemy(engine, {x: 0, y: 50}),]
-            }, 5000)
         }
 
-    }, [isGameStarted])
+    }, [isGameStarted, isBuildMode])
 
 
     return (
@@ -170,17 +200,29 @@ const Game: React.FC<GameProps> = ({engine}) => {
                     id="towerOneImage"
                     alt="towerOneImage sprite"
                     src="towerOne.svg"
-                    width="20"
-                    height="20"
                     ref={towerOneImage}
                 />
                 <img
                     id="towerTwoImage"
                     alt="towerTwo Image sprite"
                     src="towerTwo.svg"
-                    width="20"
-                    height="20"
                     ref={towerTwoImage}
+                />
+            </div>
+            <div className="b-enemies-sprite" style={{display: 'none'}}>
+                <img
+                    id="enemyOneImage"
+                    alt="enemyOneImage sprite"
+                    src="enemyOne.svg"
+                    ref={enemyOneImage}
+                />
+            </div>
+            <div className="b-projectiles-sprite" style={{display: 'none'}}>
+                <img
+                    id="projectileOneImage"
+                    alt="projectileOneImage sprite"
+                    src="projectileOne.svg"
+                    ref={projectileOneImage}
                 />
             </div>
             {isGameOver && (
@@ -196,6 +238,19 @@ const Game: React.FC<GameProps> = ({engine}) => {
             <div>
                 <button onClick={() => setIsGameStarted(true)}>Start teh game</button>
                 <button onClick={() => setIsGameStarted(false)}>End teh game</button>
+                <button onClick={() => {
+                    //setIsBuildMode(true)
+                    engine.isCanBuild = true
+                    engine.draftTower = new Tower(engine, towerOneImage.current, projectileOneImage.current, {x: 0, y: 0})
+                }}>Build 1 level tower
+                </button>
+                <button onClick={() => {
+                    //setIsBuildMode(true)
+                    engine.isCanBuild = true
+                    engine.draftTower = new Tower(engine, towerTwoImage.current, projectileOneImage.current, {x: 0, y: 0})
+                }}>Build 2 level tower
+                </button>
+                <button onClick={() => setIsBuildMode(false)}>Build mode OFF</button>
             </div>
         </section>
     )

@@ -5,12 +5,12 @@ class Map {
     constructor(
         private _mapParams = {
             width: 600,
-            height: 300,
-            gridStep: 20,
+            height: 600,
+            gridStep: 30,
             startX: 0,
-            startY: 40,
+            startY: 80,
             rightBorder: 0,
-            bottomBorder: 220
+            bottomBorder: 280
         }
     ) {
         this._mapParams.rightBorder = this._mapParams.width / 2
@@ -36,12 +36,12 @@ class Map {
             mapParams.width / 2,
             mapParams.startY,
             mapParams.gridStep,
-            200
+            mapParams.bottomBorder - mapParams.gridStep
         )
         // turn to the right
         context.rect(
             mapParams.width / 2,
-            200 + mapParams.gridStep,
+            mapParams.bottomBorder + mapParams.gridStep,
             mapParams.width / 2,
             mapParams.gridStep
         )

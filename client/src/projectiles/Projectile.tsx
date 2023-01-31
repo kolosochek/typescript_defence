@@ -2,8 +2,9 @@ import TDEngine, {twoDCoordinatesI} from "../engine/TDEngine";
 import Enemy from "../enemies/Enemy";
 import Tower, {TowerI} from "../towers/Tower";
 
-interface ProjectileI {
+export interface ProjectileI {
     engine: TDEngine,
+    image: CanvasImageSource,
     projectileParams?: {
         projectileSpeed: number,
         targetX: twoDCoordinatesI["x"],
@@ -18,7 +19,8 @@ interface ProjectileI {
 class Projectile {
     constructor(
         public engine: ProjectileI['engine'],
-        public target: Enemy,
+        public image: ProjectileI['image'],
+        public target: Enemy | null,
         public tower: Tower,
         public damage: TowerI['towerParam']['attackDamage'],
         public currentPosition: twoDCoordinatesI = {
@@ -31,8 +33,8 @@ class Projectile {
             targetY: 0,
             rectCenterX: 0,
             rectCenterY: 0,
-            width: 1,
-            height: 1,
+            width: 10,
+            height: 10,
         },
         public distanceMoved = 0
     ) {
@@ -40,23 +42,34 @@ class Projectile {
         this.projectileParams.rectCenterY = this.projectileParams.height / 2
     }
 
+    public draw() {
+        this.engine.context.beginPath()
+        if (this.image) {
+            this.engine.context?.drawImage(this.image, this.currentPosition.x, this.currentPosition.y, this.projectileParams.width, this.projectileParams.height)
+        } else {
+            this.engine.context.strokeStyle = 'black';
+            this.engine.context.strokeRect(
+                this.currentPosition.x,
+                this.currentPosition.y,
+                this.projectileParams.width,
+                this.projectileParams.height,
+            );
+            this.engine.context.stroke();
+        }
+        this.engine.context.closePath()
+    }
+
     public move() {
+        if (!this.target) {
+            return;
+        }
         // increment projectile moved distance by speed
         this.distanceMoved += this.projectileParams.projectileSpeed
         // vector projectile to the target and increment projectile 2d coords
         this.findTargetVector()
 
-        // render projectile
-        this.engine.context.beginPath()
-        this.engine.context.strokeStyle = 'black';
-        this.engine.context.strokeRect(
-            this.currentPosition.x,
-            this.currentPosition.y,
-            this.projectileParams.width,
-            this.projectileParams.height,
-        );
-        this.engine.context.stroke();
-        this.engine.context.closePath()
+        // draw projectile 2d representation
+        this.draw()
 
         // if projectile out of map borders, then delete it
         if (this.currentPosition.x > this.engine.map.mapParams.width) {
@@ -68,6 +81,9 @@ class Projectile {
     }
 
     public findTargetVector() {
+        if (!this.target) {
+            return;
+        }
         //find unit vector
         const xDistance = this.target.currentPosition.x + this.projectileParams.rectCenterX - this.currentPosition.x;
         const yDistance = this.target.currentPosition.y + this.projectileParams.rectCenterY - this.currentPosition.y;
@@ -75,29 +91,35 @@ class Projectile {
 
         if (distanceToTarget < this.distanceMoved) {
             // collision
-            // debug
-            console.log(this.target.hp)
-            console.log(`this.target.hp`)
-            //
-            if (this.target.hp > 0) {
-                this.target.hp -= this.damage;
-            } else {
-                // release tower target
-                this.tower.target = null
-                // target is dead
-                this.target.destroy()
-                // increment score when enemy died(is destroyed)
-                this.engine.score += 1;
-                // increment money due to target bounty
-                this.engine.money += this.target.enemyParams.bounty
-            }
-            this.destroy()
-            //this.currentPosition.x = this.target.currentPosition.x + this.projectileParams.rectCenterX;
-            //this.currentPosition.y = this.target.currentPosition.y + this.projectileParams.rectCenterY;
+            this.collision()
         } else {
             this.currentPosition.x = this.currentPosition.x + this.distanceMoved * xDistance / distanceToTarget;
             this.currentPosition.y = this.currentPosition.y + this.distanceMoved * yDistance / distanceToTarget;
         }
+    }
+
+    public collision() {
+        this.destroy()
+        if (this.target.hp > 0) {
+            this.target.hp -= this.damage;
+            // debug
+            console.log(this.target.hp)
+            console.log(`this.target.hp`)
+            //
+        } else {
+            // target is dead
+            const isTargetDead = true
+            if(this.target) {
+                this.target.destroy()
+                // release tower target
+                this.tower.target = null
+                // release projectile target
+                this.target = null
+            }
+
+        }
+        //this.currentPosition.x = this.target.currentPosition.x + this.projectileParams.rectCenterX;
+        //this.currentPosition.y = this.target.currentPosition.y + this.projectileParams.rectCenterY;
     }
 
     public destroy() {
