@@ -24,7 +24,7 @@ class Map {
         const mapParams = this.mapParams
 
         context.beginPath()
-        context.fillStyle = 'green'
+        context.fillStyle = '#bdbdbd'
         // first right line
         context.rect(
             mapParams.startX,

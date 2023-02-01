@@ -8,9 +8,7 @@ export interface GameProps extends PropsWithChildren {
     lives?: number,
     score?: number,
     money?: number,
-    isBuildMode?: boolean,
     isEnoughMoney?: boolean,
-
 }
 
 const Game: React.FC<GameProps> = ({engine}) => {
@@ -18,17 +16,22 @@ const Game: React.FC<GameProps> = ({engine}) => {
     // tower sprite img
     const towerOneImage = useRef<HTMLImageElement>(null)
     const towerTwoImage = useRef<HTMLImageElement>(null)
+    const towerThreeImage = useRef<HTMLImageElement>(null)
     // enemy sprite img
     const enemyOneImage = useRef<HTMLImageElement>(null)
     // projectile sprite img
     const projectileOneImage = useRef<HTMLImageElement>(null)
     const projectileTwoImage = useRef<HTMLImageElement>(null)
+    const projectileThreeImage = useRef<HTMLImageElement>(null)
+    // projectile hit img
+    const projectileHitOneImage = useRef<HTMLImageElement>(null)
+    const projectileHitTwoImage = useRef<HTMLImageElement>(null)
+    const projectileHitThreeImage = useRef<HTMLImageElement>(null)
     // game status params
     const [lives, setLives] = useState<GameProps["lives"]>(10)
     const [score, setScore] = useState<GameProps["score"]>(0)
     const [money, setMoney] = useState<GameProps["money"]>(100)
     const [isEnoughMoney, setIsEnoughMoney] = useState<GameProps["isEnoughMoney"]>(false)
-    const [isBuildMode, setIsBuildMode] = useState<GameProps["isBuildMode"]>(false)
     const [isGameOver, setIsGameOver] = useState<boolean>(false)
     const [isGameStarted, setIsGameStarted] = useState<boolean>(false)
 
@@ -47,7 +50,7 @@ const Game: React.FC<GameProps> = ({engine}) => {
 
             // build mode
             if (engine.isCanBuild) {
-                if(engine.draftTower) {
+                if (engine.draftTower) {
                     engine.draftTower.draftBuildTower()
                 }
             }
@@ -114,46 +117,51 @@ const Game: React.FC<GameProps> = ({engine}) => {
         engine.setContext(context!)
 
         /* BUILD MODE */
-
-        // add canvas mousemove event listener
-        canvas.current.addEventListener('mousemove', (e: MouseEvent) => {
-            engine.draftShowTower({x: e.pageX, y: e.pageY})
-        })
-
-        canvas.current.addEventListener('click', (e: MouseEvent) => {
-            engine.draftBuildTower({x: e.pageX, y: e.pageY})
-        })
-
-        // add canvas mouse click event listener
-
-        /*
-        canvas.current.addEventListener('click', (e: MouseEvent) => {
-            if(isBuildMode) {
-                // debug
-                console.log(`CLICK! mouseXY: ${e.pageX}:${e.pageY}`)
-                //
-                engine.towers = [
-                    ...engine.towers,
-                    new Tower(engine, towerOneImage.current, projectileOneImage.current, {x: e.pageX, y: e.pageY}),
-                ]
-            } else {
-                engine.isCanBuild = false
-            }
-        })
-
-
-
+            // add canvas mousemove event listener
+            canvas.current.addEventListener('mousemove', (e: MouseEvent) => {
+                engine.draftShowTower({x: e.pageX, y: e.pageY})
+            })
+            // add canvas mouse click event listener
+            canvas.current.addEventListener('click', (e: MouseEvent) => {
+                engine.draftBuildTower({x: e.pageX, y: e.pageY})
+            })
         /* /BUILD MODE */
 
-        // fill towers array
-        //engine.towers = [
-        //    new Tower(engine, towerOneImage.current, projectileOneImage.current, {x: 140, y: 200} ),
-        //new Tower(engine, towerOneImage.current, {x: 360, y: 220}),
-        //new Tower(engine, towerTwoImage.current, {x: 340, y: 60}),
-        //]
+        /* LOAD SPRITES */
+        // tower sprites
+        engine.towerSprites = [
+            {levelOne: towerOneImage.current},
+            {levelTwo: towerTwoImage.current},
+            {levelThree: towerThreeImage.current},
+        ]
+        // projectile sprites
+        engine.projectileSprites = [
+            {levelOne: projectileOneImage.current},
+            {levelTwo: projectileTwoImage.current},
+            {levelThree: projectileThreeImage.current},
+        ]
+        // projectile hit sprites
+        engine.projectileHitSprites = [
+            {levelOne: projectileHitOneImage.current},
+            {levelTwo: projectileTwoImage.current},
+            {levelThree: projectileThreeImage.current},
+        ]
+        /* /LOAD SPRITES */
 
         // fill enemies array
         const enemiesArray = [
+            new Enemy(engine, enemyOneImage.current),
+            new Enemy(engine, enemyOneImage.current),
+            new Enemy(engine, enemyOneImage.current),
+            new Enemy(engine, enemyOneImage.current),
+            new Enemy(engine, enemyOneImage.current),
+            new Enemy(engine, enemyOneImage.current),
+            new Enemy(engine, enemyOneImage.current),
+            new Enemy(engine, enemyOneImage.current),
+            new Enemy(engine, enemyOneImage.current),
+            new Enemy(engine, enemyOneImage.current),
+            new Enemy(engine, enemyOneImage.current),
+            new Enemy(engine, enemyOneImage.current),
             new Enemy(engine, enemyOneImage.current),
             new Enemy(engine, enemyOneImage.current),
             new Enemy(engine, enemyOneImage.current),
@@ -199,7 +207,7 @@ const Game: React.FC<GameProps> = ({engine}) => {
                     style={{border: "2px solid green"}}
                 ></canvas>
             </div>
-            <div className="b-towers-sprite" style={{display: 'none'}}>
+            <div className="b-tower-sprite" style={{display: 'none'}}>
                 <img
                     id="towerOneImage"
                     alt="towerOneImage sprite"
@@ -208,12 +216,18 @@ const Game: React.FC<GameProps> = ({engine}) => {
                 />
                 <img
                     id="towerTwoImage"
-                    alt="towerTwo Image sprite"
+                    alt="towerTwoImage sprite"
                     src="towerTwo.svg"
                     ref={towerTwoImage}
                 />
+                <img
+                    id="towerThreeImage"
+                    alt="towerThreeImage sprite"
+                    src="towerThree.svg"
+                    ref={towerThreeImage}
+                />
             </div>
-            <div className="b-enemies-sprite" style={{display: 'none'}}>
+            <div className="b-enemy-sprite" style={{display: 'none'}}>
                 <img
                     id="enemyOneImage"
                     alt="enemyOneImage sprite"
@@ -221,7 +235,7 @@ const Game: React.FC<GameProps> = ({engine}) => {
                     ref={enemyOneImage}
                 />
             </div>
-            <div className="b-projectiles-sprite" style={{display: 'none'}}>
+            <div className="b-projectile-sprite" style={{display: 'none'}}>
                 <img
                     id="projectileOneImage"
                     alt="projectileOneImage sprite"
@@ -234,6 +248,32 @@ const Game: React.FC<GameProps> = ({engine}) => {
                     src="projectileTwo.svg"
                     ref={projectileTwoImage}
                 />
+                <img
+                    id="projectileThreeImage"
+                    alt="projectileThreeImage sprite"
+                    src="projectileThree.svg"
+                    ref={projectileThreeImage}
+                />
+            </div>
+            <div className="b-projectile-hit-sprite" style={{display: 'none'}}>
+                <img
+                    id="projectileHitOneImage"
+                    alt="projectileHitOneImage sprite"
+                    src="projectileHitOne.svg"
+                    ref={projectileHitOneImage}
+                />
+                <img
+                    id="projectileHitTwoImage"
+                    alt="projectileHitTwoImage sprite"
+                    src="projectileHitTwo.svg"
+                    ref={projectileHitTwoImage}
+                />
+                <img
+                    id="projectileHitThreeImage"
+                    alt="projectileHitThreeImage sprite"
+                    src="projectileHitThree.svg"
+                    ref={projectileHitThreeImage}
+                />
             </div>
             {isGameOver && (
                 <h1>GAME IS OVER!</h1>
@@ -245,28 +285,65 @@ const Game: React.FC<GameProps> = ({engine}) => {
                     <span style={{color: `${isEnoughMoney ? 'red' : ''}`}}>{`Money: $${money}`}</span>
                 </p>
             </div>
+            <hr/>
             <div>
                 <button onClick={() => setIsGameStarted(true)}>Start teh game</button>
                 <button onClick={() => setIsGameStarted(false)}>End teh game</button>
+            </div>
+            <div>
                 <button onClick={() => {
-                    if(money >= engine.levelOneTowerParam.price) {
+                    if (money >= engine.towerOneParam.towerParams.price) {
                         setIsEnoughMoney(false)
                         engine.isCanBuild = true
-                        engine.draftTower = new Tower(engine, towerOneImage.current, projectileOneImage.current, engine.cursorPosition, engine.towerOneParam)
+                        engine.draftTower = new Tower(
+                            engine,
+                            engine.towerSprites[0].levelOne,
+                            engine.projectileSprites[0].levelOne,
+                            engine.projectileHitSprites[0].levelOne,
+                            engine.cursorPosition,
+                            engine.towerOneParam.towerParams,
+                            engine.towerOneParam.projectileParams
+                        )
                     } else {
                         setIsEnoughMoney(true)
                     }
-                }}>Build 1 level tower( $25 )
+                }}>Build 1 level tower(${engine.towerOneParam.towerParams.price})
                 </button>
                 <button onClick={() => {
-                    if(money >= engine.levelTwoTowerParam.price) {
+                    if (money >= engine.towerTwoParam.towerParams.price) {
                         setIsEnoughMoney(false)
                         engine.isCanBuild = true
-                        engine.draftTower = new Tower(engine, towerTwoImage.current, projectileTwoImage.current, engine.cursorPosition, engine.towerTwoParam)
+                        engine.draftTower = new Tower(
+                            engine,
+                            engine.towerSprites[1].levelTwo,
+                            engine.projectileSprites[1].levelTwo,
+                            engine.projectileHitSprites[1].levelTwo,
+                            engine.cursorPosition,
+                            engine.towerTwoParam.towerParams,
+                            engine.towerTwoParam.projectileParams,
+                        )
                     } else {
                         setIsEnoughMoney(true)
                     }
-                }}>Build 2 level tower( $45 )
+                }}>Build 2 level tower(${engine.towerTwoParam.towerParams.price})
+                </button>
+                <button onClick={() => {
+                    if (money >= engine.towerThreeParam.towerParams.price) {
+                        setIsEnoughMoney(false)
+                        engine.isCanBuild = true
+                        engine.draftTower = new Tower(
+                            engine,
+                            engine.towerSprites[2].levelThree,
+                            engine.projectileSprites[2].levelThree,
+                            engine.projectileHitSprites[2].levelThree,
+                            engine.cursorPosition,
+                            engine.towerThreeParam.towerParams,
+                            engine.towerThreeParam.projectileParams,
+                        )
+                    } else {
+                        setIsEnoughMoney(true)
+                    }
+                }}>Build 3 level tower(${engine.towerThreeParam.towerParams.price})
                 </button>
             </div>
         </section>

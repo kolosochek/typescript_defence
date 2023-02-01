@@ -27,7 +27,7 @@ class Enemy {
             width: 20,
             height: 20,
             spaceBetweenEnemies: 35,
-            speed: 0.62,
+            speed: 0.65,
             bounty: 5,
             strokeStyle: 'red',
             rectCenterX: 0,

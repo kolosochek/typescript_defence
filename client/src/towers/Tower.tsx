@@ -1,12 +1,10 @@
 import TDEngine, {twoDCoordinatesI} from "../engine/TDEngine";
 import Enemy from "../enemies/Enemy";
 import Projectile, {ProjectileI} from "../projectiles/Projectile";
-import enemy from "../enemies/Enemy";
 
 export interface TowerI {
     engine: TDEngine
-    towerParam: {
-        projectileSpeed: number,
+    towerParams: {
         attackRate: number,
         attackDamage: number,
         attackRange: number,
@@ -19,8 +17,19 @@ export interface TowerI {
         firingX: number,
         firingY: number,
         price?: number,
-    }
+    },
+    projectileParams: {
+        projectileSpeed: number,
+        targetX: number,
+        targetY: number,
+        rectCenterX: number,
+        rectCenterY: number,
+        width: number,
+        height: number,
+        projectileHitAlive: number,
+    },
     image: CanvasImageSource,
+    attackIntervalTimer: NodeJS.Timer | null
 }
 
 class Tower {
@@ -31,12 +40,12 @@ class Tower {
         public engine: TowerI['engine'],
         public image?: TowerI['image'],
         public projectileImage?: ProjectileI['image'],
+        public projectileHitImage?: ProjectileI['image'],
         public currentPosition: twoDCoordinatesI = {
             x: 0,
             y: 0,
         },
-        public towerParam: TowerI['towerParam'] = {
-            projectileSpeed: 100,
+        public towerParam: TowerI['towerParams'] = {
             attackRate: 1000,
             attackDamage: 30,
             attackRange: 120,
@@ -50,16 +59,25 @@ class Tower {
             firingY: 0,
             price: 15,
         },
+        public projectileParams: TowerI['projectileParams'] = {
+            projectileSpeed: 0.1,
+            targetX: 0,
+            targetY: 0,
+            rectCenterX: 0,
+            rectCenterY: 0,
+            width: 10,
+            height: 10,
+            projectileHitAlive: 100,
+        },
+        public attackIntervalTimer: TowerI['attackIntervalTimer'] = null
     ) {
         this.towerParam.rectCenterX = this.towerParam.width / 2
         this.towerParam.rectCenterY = this.towerParam.height / 2
 
-        setInterval(() => {
-            this.isCanFire = true;
-        }, this.towerParam.attackRate)
+
     }
 
-    public draw(){
+    public draw() {
         // save the context
         this.engine.context.save()
         this.engine.context?.beginPath()
@@ -85,9 +103,20 @@ class Tower {
         this.engine.context.restore()
     }
 
-    public drawTowerRange(){
+    public setAttackInterval = () => {
+        // initial build fire
+        this.isCanFire = true;
+        // then set attack interval
+        this.attackIntervalTimer = setInterval(() => {
+            this.isCanFire = true;
+        }, this.towerParam.attackRate)
+    }
+
+    public drawTowerRange() {
         this.engine.context?.beginPath()
-        this.engine.context!.strokeStyle = 'red'
+        this.engine.context.lineWidth = 0.75
+        this.engine.context.setLineDash([5, 15])
+        this.engine.context!.strokeStyle = '#000'
         // draw tower range
         this.engine.context?.arc(
             this.currentPosition.x - this.towerParam.width / 2,
@@ -99,6 +128,7 @@ class Tower {
         this.engine.context?.stroke()
         this.engine.context?.closePath()
     }
+
     public drawTower() {
         // draw tower 2d representation
         this.draw()
@@ -124,10 +154,7 @@ class Tower {
                 return this.isEnemyInRange(enemy)
             })
         } else {
-            // highlight the target
-            this.target.enemyParams.strokeStyle = 'yellow'
             if (this.target && !this.isEnemyInRange(this.target!)) {
-                this.target.enemyParams.strokeStyle = 'red'
                 this.target = null;
             }
         }
@@ -170,14 +197,14 @@ class Tower {
         }
     }
 
-    public draftBuildTower(){
-        if(this.engine.isCanBuild) {
+    public draftBuildTower() {
+        if (this.engine.isCanBuild) {
             this.draw()
             this.drawTowerRange()
         }
     }
 
-    public destroy(){
+    public destroy() {
         this.engine.towers.filter(tower => this !== tower)
     }
 }
