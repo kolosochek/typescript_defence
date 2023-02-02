@@ -37,6 +37,9 @@ const Game: React.FC<GameProps> = ({engine}) => {
     const [isEnoughMoney, setIsEnoughMoney] = useState<GameProps["isEnoughMoney"]>(false)
     const [isGameOver, setIsGameOver] = useState<boolean>(false)
     const [isGameStarted, setIsGameStarted] = useState<boolean>(false)
+    // safari hotfix
+    engine.requestIdleCallback = 0
+    engine.animationFrameId = 0
 
 
     const gameLoop = () => {
