@@ -45,7 +45,7 @@ class Tower {
             x: 0,
             y: 0,
         },
-        public towerParam: TowerI['towerParams'] = {
+        public towerParams: TowerI['towerParams'] = {
             attackRate: 1000,
             attackDamage: 30,
             attackRange: 120,
@@ -71,8 +71,8 @@ class Tower {
         },
         public attackIntervalTimer: TowerI['attackIntervalTimer'] = null
     ) {
-        this.towerParam.rectCenterX = this.towerParam.width / 2
-        this.towerParam.rectCenterY = this.towerParam.height / 2
+        this.towerParams.rectCenterX = this.towerParams.width / 2
+        this.towerParams.rectCenterY = this.towerParams.height / 2
 
 
     }
@@ -83,19 +83,19 @@ class Tower {
         this.engine.context?.beginPath()
         // draw tower object
         if (this.image) {
-            this.engine.context.translate(this.currentPosition.x - this.towerParam.rectCenterX, this.currentPosition.y - this.towerParam.rectCenterY);
-            this.engine.context.rotate(this.towerParam.firingAngle)
-            //this.engine.context?.drawImage(this.image, this.currentPosition.x - this.towerParam.width, this.currentPosition.y - this.towerParam.height, this.towerParam.width, this.towerParam.height)
-            this.engine.context?.drawImage(this.image, -this.towerParam.rectCenterX, -this.towerParam.rectCenterY, this.towerParam.width, this.towerParam.height)
+            this.engine.context.translate(this.currentPosition.x - this.towerParams.rectCenterX, this.currentPosition.y - this.towerParams.rectCenterY);
+            this.engine.context.rotate(this.towerParams.firingAngle)
+            //this.engine.context?.drawImage(this.image, this.currentPosition.x - this.towerParams.width, this.currentPosition.y - this.towerParams.height, this.towerParams.width, this.towerParams.height)
+            this.engine.context?.drawImage(this.image, -this.towerParams.rectCenterX, -this.towerParams.rectCenterY, this.towerParams.width, this.towerParams.height)
         } else {
-            this.engine.context.translate(this.currentPosition.x - this.towerParam.rectCenterX, this.currentPosition.y - this.towerParam.rectCenterY);
-            this.engine.context.rotate(this.towerParam.firingAngle)
-            this.engine.context.strokeStyle = this.towerParam.strokeStyle
+            this.engine.context.translate(this.currentPosition.x - this.towerParams.rectCenterX, this.currentPosition.y - this.towerParams.rectCenterY);
+            this.engine.context.rotate(this.towerParams.firingAngle)
+            this.engine.context.strokeStyle = this.towerParams.strokeStyle
             this.engine.context?.strokeRect(
-                0 - this.towerParam.rectCenterX,
-                0 - this.towerParam.rectCenterY,
-                this.towerParam.width,
-                this.towerParam.height
+                0 - this.towerParams.rectCenterX,
+                0 - this.towerParams.rectCenterY,
+                this.towerParams.width,
+                this.towerParams.height
             )
         }
         this.engine.context.closePath()
@@ -109,7 +109,7 @@ class Tower {
         // then set attack interval
         this.attackIntervalTimer = setInterval(() => {
             this.isCanFire = true;
-        }, this.towerParam.attackRate)
+        }, this.towerParams.attackRate)
     }
 
     public drawTowerRange() {
@@ -119,9 +119,9 @@ class Tower {
         this.engine.context!.strokeStyle = '#000'
         // draw tower range
         this.engine.context?.arc(
-            this.currentPosition.x - this.towerParam.width / 2,
-            this.currentPosition.y - this.towerParam.height / 2,
-            this.towerParam.attackRange,
+            this.currentPosition.x - this.towerParams.width / 2,
+            this.currentPosition.y - this.towerParams.height / 2,
+            this.towerParams.attackRange,
             0,
             360
         )
@@ -137,11 +137,11 @@ class Tower {
     }
 
     public isEnemyInRange(enemy: Enemy) {
-        const distance = (enemy.currentPosition.x - this.currentPosition.x + this.towerParam.width)
-            * (enemy.currentPosition.x - this.currentPosition.x + this.towerParam.width)
-            + (enemy.currentPosition.y - this.currentPosition.y + this.towerParam.height)
-            * (enemy.currentPosition.y - this.currentPosition.y + this.towerParam.height)
-        if (distance < (this.towerParam.attackRange * this.towerParam.attackRange)) {
+        const distance = (enemy.currentPosition.x - this.currentPosition.x + this.towerParams.width)
+            * (enemy.currentPosition.x - this.currentPosition.x + this.towerParams.width)
+            + (enemy.currentPosition.y - this.currentPosition.y + this.towerParams.height)
+            * (enemy.currentPosition.y - this.currentPosition.y + this.towerParams.height)
+        if (distance < (this.towerParams.attackRange * this.towerParams.attackRange)) {
             this.target = enemy
             return true
         }
@@ -167,19 +167,19 @@ class Tower {
         }
         const xDistance = this.target.currentPosition.x - this.currentPosition.x;
         const yDistance = this.target.currentPosition.y - this.currentPosition.y;
-        this.towerParam.firingAngle = Math.atan2(yDistance, xDistance) + Math.PI; //* 180 / Math.PI
+        this.towerParams.firingAngle = Math.atan2(yDistance, xDistance) + Math.PI; //* 180 / Math.PI
         // shoot projectiles from sides of the tower
         const distance = Math.sqrt((xDistance * xDistance) + (yDistance * yDistance));
-        this.towerParam.firingX = this.currentPosition.x + this.towerParam.attackRange * xDistance / distance;
-        this.towerParam.firingY = this.currentPosition.y + this.towerParam.attackRate * yDistance / distance;
+        this.towerParams.firingX = this.currentPosition.x + this.towerParams.attackRange * xDistance / distance;
+        this.towerParams.firingY = this.currentPosition.y + this.towerParams.attackRate * yDistance / distance;
     }
 
     public fire() {
         const fireFromCoordinates = {
-            //x: this.towerParam.firingX,
-            //y: this.towerParam.firingY,
-            x: this.currentPosition.x - this.towerParam.rectCenterX,
-            y: this.currentPosition.y - this.towerParam.rectCenterY,
+            //x: this.towerParams.firingX,
+            //y: this.towerParams.firingY,
+            x: this.currentPosition.x - this.towerParams.rectCenterX,
+            y: this.currentPosition.y - this.towerParams.rectCenterY,
         }
         if (this.isCanFire && this.target) {
             this.engine.projectiles = [
@@ -189,7 +189,7 @@ class Tower {
                     this.projectileImage,
                     this.target!,
                     this,
-                    this.towerParam.attackDamage,
+                    this.towerParams.attackDamage,
                     fireFromCoordinates
                 )]
 

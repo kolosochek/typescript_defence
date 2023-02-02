@@ -12,7 +12,10 @@ export interface GameProps extends PropsWithChildren {
 }
 
 const Game: React.FC<GameProps> = ({engine}) => {
+    // canvas ref
     const canvas = useRef<HTMLCanvasElement>(null)
+    // game window ref
+    const gameWindow = useRef<HTMLDivElement>(null)
     // tower sprite img
     const towerOneImage = useRef<HTMLImageElement>(null)
     const towerTwoImage = useRef<HTMLImageElement>(null)
@@ -39,9 +42,11 @@ const Game: React.FC<GameProps> = ({engine}) => {
     const gameLoop = () => {
         if (engine.lives > 0) {
             engine.clearCanvas()
+            // draw map grid
+            engine.map.drawGrid()
 
             // draw level map
-            engine.map?.drawMap(engine.context!)
+            engine.map?.drawMap()
 
             // draw towers
             engine.towers?.forEach((tower, index) => {
@@ -117,35 +122,43 @@ const Game: React.FC<GameProps> = ({engine}) => {
         engine.setContext(context!)
 
         /* BUILD MODE */
-            // add canvas mousemove event listener
-            canvas.current.addEventListener('mousemove', (e: MouseEvent) => {
-                engine.draftShowTower({x: e.pageX, y: e.pageY})
-            })
-            // add canvas mouse click event listener
-            canvas.current.addEventListener('click', (e: MouseEvent) => {
-                engine.draftBuildTower({x: e.pageX, y: e.pageY})
-            })
+        // add canvas mousemove event listener
+        canvas.current.addEventListener('mousemove', (e: MouseEvent) => {
+            engine.draftShowTower({x: e.pageX, y: e.pageY})
+        })
+        // add canvas mouse click event listener
+        canvas.current.addEventListener('click', (e: MouseEvent) => {
+            engine.draftBuildTower({x: e.pageX, y: e.pageY})
+        })
+        // add escape hotkey to cancel building mode
+        gameWindow.current.addEventListener('keydown', (e:KeyboardEvent) => {
+            // debug
+            console.log(e)
+            console.log(`e`)
+            //
+            engine.manageHotkeys(e)
+        })
         /* /BUILD MODE */
 
         /* LOAD SPRITES */
         // tower sprites
-        engine.towerSprites = [
-            {levelOne: towerOneImage.current},
-            {levelTwo: towerTwoImage.current},
-            {levelThree: towerThreeImage.current},
-        ]
+        engine.towerSprites = {
+            levelOne: towerOneImage.current,
+            levelTwo: towerTwoImage.current,
+            levelThree: towerThreeImage.current
+        }
         // projectile sprites
-        engine.projectileSprites = [
-            {levelOne: projectileOneImage.current},
-            {levelTwo: projectileTwoImage.current},
-            {levelThree: projectileThreeImage.current},
-        ]
+        engine.projectileSprites = {
+            levelOne: projectileOneImage.current,
+            levelTwo: projectileTwoImage.current,
+            levelThree: projectileThreeImage.current
+        }
         // projectile hit sprites
-        engine.projectileHitSprites = [
-            {levelOne: projectileHitOneImage.current},
-            {levelTwo: projectileTwoImage.current},
-            {levelThree: projectileThreeImage.current},
-        ]
+        engine.projectileHitSprites = {
+            levelOne: projectileHitOneImage.current,
+            levelTwo: projectileTwoImage.current,
+            levelThree: projectileThreeImage.current
+        }
         /* /LOAD SPRITES */
 
         // fill enemies array
@@ -177,7 +190,7 @@ const Game: React.FC<GameProps> = ({engine}) => {
         engine.setEnemies(enemiesArray)
 
         // draw level map
-        engine.map?.drawMap(engine.context!)
+        engine.map?.drawMap()
 
         // draw enemies
         engine.enemies?.forEach((enemy, index) => {
@@ -197,7 +210,7 @@ const Game: React.FC<GameProps> = ({engine}) => {
 
 
     return (
-        <section>
+        <section ref={gameWindow}>
             <div>
                 <canvas
                     ref={canvas!}
@@ -205,6 +218,7 @@ const Game: React.FC<GameProps> = ({engine}) => {
                     width={engine.map?.mapParams.width}
                     height={engine.map?.mapParams.height}
                     style={{border: "2px solid green"}}
+                    tabIndex={1}
                 ></canvas>
             </div>
             <div className="b-tower-sprite" style={{display: 'none'}}>
@@ -297,9 +311,9 @@ const Game: React.FC<GameProps> = ({engine}) => {
                         engine.isCanBuild = true
                         engine.draftTower = new Tower(
                             engine,
-                            engine.towerSprites[0].levelOne,
-                            engine.projectileSprites[0].levelOne,
-                            engine.projectileHitSprites[0].levelOne,
+                            engine.towerSprites.levelOne,
+                            engine.projectileSprites.levelOne,
+                            engine.projectileHitSprites.levelOne,
                             engine.cursorPosition,
                             engine.towerOneParam.towerParams,
                             engine.towerOneParam.projectileParams
@@ -315,9 +329,9 @@ const Game: React.FC<GameProps> = ({engine}) => {
                         engine.isCanBuild = true
                         engine.draftTower = new Tower(
                             engine,
-                            engine.towerSprites[1].levelTwo,
-                            engine.projectileSprites[1].levelTwo,
-                            engine.projectileHitSprites[1].levelTwo,
+                            engine.towerSprites.levelTwo,
+                            engine.projectileSprites.levelTwo,
+                            engine.projectileHitSprites.levelTwo,
                             engine.cursorPosition,
                             engine.towerTwoParam.towerParams,
                             engine.towerTwoParam.projectileParams,
@@ -333,9 +347,9 @@ const Game: React.FC<GameProps> = ({engine}) => {
                         engine.isCanBuild = true
                         engine.draftTower = new Tower(
                             engine,
-                            engine.towerSprites[2].levelThree,
-                            engine.projectileSprites[2].levelThree,
-                            engine.projectileHitSprites[2].levelThree,
+                            engine.towerSprites.levelThree,
+                            engine.projectileSprites.levelThree,
+                            engine.projectileHitSprites.levelThree,
                             engine.cursorPosition,
                             engine.towerThreeParam.towerParams,
                             engine.towerThreeParam.projectileParams,

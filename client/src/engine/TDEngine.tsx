@@ -1,6 +1,6 @@
 import Enemy, {EnemyI} from "../enemies/Enemy";
 import Tower, {TowerI} from "../towers/Tower";
-import Map from "../maps/Map";
+import Map, {MapI} from "../maps/Map";
 import Projectile from "../projectiles/Projectile";
 
 // utilities declaration
@@ -11,6 +11,7 @@ type PartialRecord<K extends keyof any, T> = {
 // types declaration
 type TowerNameT = "levelOne" | "levelTwo" | "levelThree"
 type TowerSpriteT = PartialRecord<TowerNameT, ImageSpriteT | null>
+type EnemySpriteT = PartialRecord<TowerNameT, ImageSpriteT | null>
 type ProjectileSpriteT = PartialRecord<TowerNameT, ImageSpriteT | null>
 type ImageSpriteT = CanvasImageSource
 
@@ -34,13 +35,14 @@ export interface TDEngineI {
     money: number,
     isCanBuild: boolean,
     isGameStarted: boolean,
+    isShowGrid: boolean,
     canvasMouseMoveEvent: EventListener | null,
     draftTower: Tower | null,
     cursorPosition: twoDCoordinatesI,
-    towerSprites: TowerSpriteT[],
-    projectileSprites: ProjectileSpriteT[],
-    projectileHitSprites: ProjectileSpriteT[],
-    enemySprites: ImageSpriteT[],
+    towerSprites: TowerSpriteT,
+    projectileSprites: ProjectileSpriteT,
+    projectileHitSprites: ProjectileSpriteT,
+    enemySprites: EnemySpriteT,
     mapSprites: ImageSpriteT[],
     predefinedTowerParams: {
         levelOne: {
@@ -73,11 +75,12 @@ class TDEngine {
         public money: TDEngineI["money"] = 100,
         public isCanBuild: TDEngineI["isCanBuild"] = false,
         public isGameStarted: TDEngineI["isGameStarted"] = false,
+        public isShowGrid: TDEngineI["isShowGrid"] = false,
         public draftTower: TDEngineI["draftTower"] = null,
-        public towerSprites: TDEngineI["towerSprites"] = [],
-        public enemySprites: TDEngineI["enemySprites"] = [],
-        public projectileSprites: TDEngineI["projectileSprites"] = [],
-        public projectileHitSprites: TDEngineI["projectileHitSprites"] = [],
+        public towerSprites: TDEngineI["towerSprites"] = {},
+        public enemySprites: TDEngineI["enemySprites"] = {},
+        public projectileSprites: TDEngineI["projectileSprites"] = {},
+        public projectileHitSprites: TDEngineI["projectileHitSprites"] = {},
         public mapSprites: TDEngineI["mapSprites"] = [],
         public predefinedTowerParams: TDEngineI["predefinedTowerParams"] = {
             levelOne: {
@@ -85,8 +88,8 @@ class TDEngine {
                     attackRate: 1000,
                     attackDamage: 30,
                     attackRange: 120,
-                    width: 40,
-                    height: 40,
+                    width: 30,
+                    height: 30,
                     rectCenterX: 0,
                     rectCenterY: 0,
                     strokeStyle: 'red',
@@ -111,8 +114,8 @@ class TDEngine {
                     attackRate: 300,
                     attackDamage: 20,
                     attackRange: 60,
-                    width: 40,
-                    height: 40,
+                    width: 30,
+                    height: 30,
                     rectCenterX: 0,
                     rectCenterY: 0,
                     strokeStyle: 'red',
@@ -137,8 +140,8 @@ class TDEngine {
                     attackRate: 4000,
                     attackDamage: 100,
                     attackRange: 250,
-                    width: 40,
-                    height: 40,
+                    width: 30,
+                    height: 30,
                     rectCenterX: 0,
                     rectCenterY: 0,
                     strokeStyle: 'red',
@@ -159,42 +162,67 @@ class TDEngine {
                 }
             },
         },
-        public cursorPosition: TDEngineI['cursorPosition'] = {x: 0, y: 0}
+        public cursorPosition: TDEngineI['cursorPosition'] = {x: 0, y: 0},
+        public draftBuildCoordinates: twoDCoordinatesI = {x: 0, y: 0}
     ) {
         this.idleTimeout = 250;
     }
 
-    public
-
-    draftShowTower(currentPosition: twoDCoordinatesI) {
-        this.cursorPosition = currentPosition
-
-        if (this.isCanBuild) {
-            // debug
-            //console.log(`isCanBuild ${currentPosition.x}:${currentPosition.y}`)
-            //
-            if (!this.draftTower) {
-                this.draftTower = new Tower(this, undefined, undefined, undefined,{x: currentPosition.x, y: currentPosition.y})
-            } else {
-                this.draftTower.currentPosition = currentPosition
+    public manageHotkeys(e:KeyboardEvent){
+        // cancel building mode
+        if(e.key === "Escape") {
+            if(this.isCanBuild){
+                this.isCanBuild = false;
+                this.isShowGrid = false;
             }
         }
     }
 
-    public findClosestGridCell(){
-        // debug
-        console.log(this.cursorPosition)
-        //
+    public findClosestTile(coordinates: twoDCoordinatesI){
+        let minDistance = this.map.mapParams.width;
+        for(let tile of this.map.mapParams.mapTilesArr){
+            const distance = (tile.x - coordinates.x + this.map.mapParams.gridStep)
+                * (tile.x - coordinates.x + this.map.mapParams.gridStep)
+                + (tile.y - coordinates.y + this.map.mapParams.gridStep)
+                * (tile.y - coordinates.y + this.map.mapParams.gridStep)
+            if(distance < minDistance){
+                minDistance = distance
+                this.map.mapParams.closestTile = tile
+            }
+        }
+
+        return {
+            x: this.map.mapParams.closestTile.x + this.map.mapParams.gridStep,
+            y: this.map.mapParams.closestTile.y + this.map.mapParams.gridStep
+        }
     }
-    public draftBuildTower(currentPosition: twoDCoordinatesI) {
-        if (this.isCanBuild && this.money >= this.draftTower.towerParam.price) {
+
+    public draftShowTower(currentPosition: twoDCoordinatesI) {
+        this.cursorPosition = currentPosition
+
+        if (this.isCanBuild) {
             // debug
-            //console.log(`draftBuildTower ${currentPosition.x}:${currentPosition.y}`)
+            console.log(`this.findClosestTile(currentPosition)`)
+            console.log(this.findClosestTile(currentPosition))
             //
+            this.draftBuildCoordinates = this.findClosestTile(currentPosition)
+
+            this.isShowGrid = true
+            if (!this.draftTower) {
+                this.draftTower = new Tower(this, undefined, undefined, undefined, this.draftBuildCoordinates)
+            } else {
+                this.draftTower.currentPosition = this.draftBuildCoordinates
+            }
+        }
+    }
+
+    public draftBuildTower(currentPosition: twoDCoordinatesI) {
+        if (this.isCanBuild && this.money >= this.draftTower.towerParams.price) {
+            this.isShowGrid = false
             if (!this.draftTower) {
                 this.draftTower = new Tower(this, undefined, undefined, undefined,{x: currentPosition.x, y: currentPosition.y})
             } else {
-                this.draftTower.currentPosition = currentPosition
+                this.draftTower.currentPosition = this.draftBuildCoordinates
             }
             this.towers = [
                 ...this.towers,
@@ -202,10 +230,13 @@ class TDEngine {
             ]
             // enable attack timer
             this.draftTower.setAttackInterval()
+            // pop chosen tile from available space to build
+            this.map.mapParams.mapTilesArr = [...this.map.mapParams.mapTilesArr.filter(tile => tile !== this.map.mapParams.closestTile)]
             // disable building mode
             this.isCanBuild = false;
-            this.money -= this.draftTower.towerParam.price
+            this.money -= this.draftTower.towerParams.price
             this.draftTower = null;
+
         }
     }
 
