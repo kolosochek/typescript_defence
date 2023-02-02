@@ -6,6 +6,8 @@ export interface MapI {
         width: number,
         height: number,
         gridStep: number,
+        backgroundColor: string,
+        gridColor: string,
         startX: number,
         startY: number,
         rightBorder: number,
@@ -23,6 +25,8 @@ class Map {
             width: 600,
             height: 600,
             gridStep: 30,
+            backgroundColor: "#bdbdbd",
+            gridColor: "#000000",
             startX: 0,
             startY: 90,
             rightBorder: 0,
@@ -66,9 +70,9 @@ class Map {
 
 
     public drawMap = () => {
-
         this.engine.context.beginPath()
-        this.engine.context.fillStyle = '#bdbdbd'
+        this.engine.context.fillStyle = this.mapParams.backgroundColor
+
         // first right line
         this.engine.context.rect(
             this.mapParams.startX,
@@ -105,7 +109,7 @@ class Map {
                 this.engine.context.moveTo(0, y + this.mapParams.gridStep);
                 this.engine.context.lineTo(this.mapParams.width + this.mapParams.gridStep, y + this.mapParams.gridStep);
             }
-            this.engine.context.strokeStyle = "black";
+            this.engine.context.strokeStyle = this.mapParams.gridColor;
             this.engine.context.stroke();
             this.engine.context.closePath()
         }
