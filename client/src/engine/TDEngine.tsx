@@ -72,7 +72,7 @@ class TDEngine {
         public requestIdleCallback: TDEngineI['requestIdleCallback'] = 0,
         public lives: TDEngineI["lives"] = 10,
         public score: TDEngineI["score"] = 0,
-        public money: TDEngineI["money"] = 100,
+        public money: TDEngineI["money"] = 9100,
         public isCanBuild: TDEngineI["isCanBuild"] = false,
         public isGameStarted: TDEngineI["isGameStarted"] = false,
         public isShowGrid: TDEngineI["isShowGrid"] = false,
