@@ -84,18 +84,18 @@ class Projectile {
         setInterval(() => {
             this.destroy()
         }, this.tower.projectileParams.projectileHitAlive)
-        if ((this.target.hp) > 0 && (this.engine.enemies.indexOf(this.target) > -1)) {
+        if ((this.target.enemyParams.hp) > 0 && (this.engine.enemies.indexOf(this.target) > -1)) {
             // debug
-            this.target.hp -= this.damage;
+            this.target.enemyParams.hp -= this.damage;
             this.damage = 0;
-        } else if((this.target.hp <= 0) && (this.engine.enemies.indexOf(this.target) > -1) ) {
+        } else if((this.target.enemyParams.hp <= 0) && (this.engine.enemies.indexOf(this.target) > -1) ) {
             // target is dead
             // release tower target
             this.engine.projectiles.filter(projectile => this.target === projectile.target)
             this.tower.target = null
             // destroy projectile target
             this.target.destroy()
-        } else if(this.target.hp <= 0){
+        } else if(this.target.enemyParams.hp <= 0){
             this.tower.target = null
         }
         //this.currentPosition.x = this.target.currentPosition.x + this.projectileParams.rectCenterX;

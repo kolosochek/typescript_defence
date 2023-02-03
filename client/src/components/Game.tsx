@@ -43,6 +43,9 @@ const Game: React.FC<GameProps> = ({engine}) => {
 
 
     const gameLoop = () => {
+        // draw level map
+        engine.map?.drawMap()
+
         if (engine.lives > 0) {
             engine.clearCanvas()
             // draw map grid
@@ -97,6 +100,16 @@ const Game: React.FC<GameProps> = ({engine}) => {
         setMoney(engine.money)
 
 
+
+        // draw enemies
+        engine.enemies?.forEach((enemy, index) => {
+            enemy.drawEnemy({
+                x: -enemy.enemyParams.spaceBetweenEnemies * engine.enemies?.length! + (index * enemy.enemyParams.spaceBetweenEnemies),
+                y: 0
+            })
+        })
+
+
         // search n destroy
         engine.towers?.forEach((tower => {
             tower.findTarget()
@@ -144,217 +157,43 @@ const Game: React.FC<GameProps> = ({engine}) => {
         /* /BUILD MODE */
 
         /* LOAD SPRITES */
-        // tower sprites
-        engine.towerSprites = {
-            levelOne: towerOneImage.current,
-            levelTwo: towerTwoImage.current,
-            levelThree: towerThreeImage.current
+        if(!Object.keys(engine.towerSprites).length) {
+            // tower sprites
+            engine.towerSprites = {
+                levelOne: towerOneImage.current,
+                levelTwo: towerTwoImage.current,
+                levelThree: towerThreeImage.current
+            }
         }
-        // projectile sprites
-        engine.projectileSprites = {
-            levelOne: projectileOneImage.current,
-            levelTwo: projectileTwoImage.current,
-            levelThree: projectileThreeImage.current
+
+        if(!Object.keys(engine.projectileSprites).length) {
+            // projectile sprites
+            engine.projectileSprites = {
+                levelOne: projectileOneImage.current,
+                levelTwo: projectileTwoImage.current,
+                levelThree: projectileThreeImage.current
+            }
         }
-        // projectile hit sprites
-        engine.projectileHitSprites = {
-            levelOne: projectileHitOneImage.current,
-            levelTwo: projectileTwoImage.current,
-            levelThree: projectileThreeImage.current
+
+        if(!Object.keys(engine.projectileHitSprites).length) {
+            // projectile hit sprites
+            engine.projectileHitSprites = {
+                levelOne: projectileHitOneImage.current,
+                levelTwo: projectileTwoImage.current,
+                levelThree: projectileThreeImage.current
+            }
         }
+
+        if(!Object.keys(engine.enemies).length) {
+            // projectile hit sprites
+            engine.enemySprites = {
+                levelOne: enemyOneImage.current,
+            }
+        }
+
+
         /* /LOAD SPRITES */
 
-        // fill enemies array
-        const enemiesArray = [
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-            new Enemy(engine, enemyOneImage.current),
-        ]
-        engine.setEnemies(enemiesArray)
-
-        // draw level map
-        engine.map?.drawMap()
-
-        // draw enemies
-        engine.enemies?.forEach((enemy, index) => {
-            enemy.drawEnemy({
-                x: -enemy.enemyParams.spaceBetweenEnemies * engine.enemies?.length! + (index * enemy.enemyParams.spaceBetweenEnemies),
-                y: 0
-            })
-        })
 
         // game start
         if (isGameStarted) {

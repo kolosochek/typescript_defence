@@ -11,7 +11,8 @@ export interface EnemyI {
         bounty: number,
         rectCenterX: number,
         rectCenterY: number,
-        strokeStyle: string
+        strokeStyle: string,
+        hp: number,
     }
 }
 
@@ -19,11 +20,7 @@ class Enemy {
     constructor(
         public engine: EnemyI['engine'],
         public image?: EnemyI['image'],
-        public currentPosition: twoDCoordinatesI = {
-            x: 0,
-            y: 0,
-        },
-        public enemyParams = {
+        public enemyParams: EnemyI['enemyParams'] = {
             width: 20,
             height: 20,
             spaceBetweenEnemies: 35,
@@ -32,12 +29,16 @@ class Enemy {
             strokeStyle: 'red',
             rectCenterX: 0,
             rectCenterY: 0,
+            hp: 100,
+        },
+        public currentPosition: twoDCoordinatesI = {
+            x: 0,
+            y: 0,
         },
         public randomOffset = {
             x: Math.floor(Math.random() * 10),
             y: Math.floor(Math.random() * 10) + 1,
         },
-        public hp = 100,
     ) {
         this.enemyParams.rectCenterX = this.enemyParams.width / 2
         this.enemyParams.rectCenterY = this.enemyParams.height / 2
