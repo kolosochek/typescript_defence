@@ -113,7 +113,7 @@ const Game: React.FC<GameProps> = ({engine}) => {
             }
 
             // isWaveInProgress?
-            if(engine.lives > 0 && engine.enemies.length == 0 && engine.waveGenerator.waveParams.isWaveInProgress) {
+            if(engine.lives > 0 && engine.enemies.length === 0 && engine.waveGenerator.waveParams.isWaveInProgress) {
                 engine.waveGenerator.waveParams.isWaveInProgress = false;
                 engine.clearMemory()
                 if (!engine.waveGenerator.waveTimerBetweenWaves) {

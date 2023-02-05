@@ -1,4 +1,4 @@
-import Enemy, {EnemyI} from "../enemies/Enemy";
+import Enemy from "../enemies/Enemy";
 import Tower, {TowerI} from "../towers/Tower";
 import Map from "../maps/Map";
 import Projectile from "../projectiles/Projectile";
