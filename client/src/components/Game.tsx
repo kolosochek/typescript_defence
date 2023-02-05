@@ -1,5 +1,5 @@
 import React, {PropsWithChildren, useEffect, useRef, useState} from 'react';
-import TDEngine from "../engine/TDEngine";
+import TDEngine, {WaveGeneratorI} from "../engine/TDEngine";
 import Tower from "../towers/Tower";
 
 export interface GameProps extends PropsWithChildren {
@@ -7,6 +7,7 @@ export interface GameProps extends PropsWithChildren {
     lives?: number,
     score?: number,
     money?: number,
+    wave?: WaveGeneratorI["waveParams"]["currentWave"],
     isEnoughMoney?: boolean,
 }
 
@@ -30,9 +31,11 @@ const Game: React.FC<GameProps> = ({engine}) => {
     const projectileHitTwoImage = useRef<HTMLImageElement>(null)
     const projectileHitThreeImage = useRef<HTMLImageElement>(null)
     // game status params
-    const [lives, setLives] = useState<GameProps["lives"]>(10)
-    const [score, setScore] = useState<GameProps["score"]>(0)
-    const [money, setMoney] = useState<GameProps["money"]>(100)
+    const [lives, setLives] = useState<GameProps["lives"]>(engine.lives)
+    const [score, setScore] = useState<GameProps["score"]>(engine.score)
+    const [money, setMoney] = useState<GameProps["money"]>(engine.money)
+    const [wave, setWave] = useState<GameProps["wave"]>(engine.waveGenerator.waveParams.currentWave)
+    const [enemiesLeft, setEnemiesLeft] = useState<GameProps["wave"]>(engine.enemies.length)
     const [isEnoughMoney, setIsEnoughMoney] = useState<GameProps["isEnoughMoney"]>(false)
     const [isGameOver, setIsGameOver] = useState<boolean>(false)
     const [isGameStarted, setIsGameStarted] = useState<boolean>(false)
@@ -43,6 +46,7 @@ const Game: React.FC<GameProps> = ({engine}) => {
         engine.map?.drawMap()
 
         if (engine.isGameStarted) {
+
             if (engine.lives > 0) {
                 engine.clearCanvas()
 
@@ -76,6 +80,11 @@ const Game: React.FC<GameProps> = ({engine}) => {
                         projectile.move()
                     })
                 }
+
+                // debug
+                //engine.highlightTile(engine.map.mapParams.closestTile)
+                //
+
             } else {
                 // GAME IS OVER!
                 setIsGameOver(true)
@@ -95,6 +104,8 @@ const Game: React.FC<GameProps> = ({engine}) => {
             setScore(engine.score)
             setLives(engine.lives)
             setMoney(engine.money)
+            setWave(engine.waveGenerator.waveParams.currentWave)
+            setEnemiesLeft(engine.enemies.length)
 
             // enemy init || move
             if(!engine.waveGenerator.isInitialized){
@@ -114,10 +125,11 @@ const Game: React.FC<GameProps> = ({engine}) => {
 
             // search n destroy
             engine.towers?.forEach((tower => {
-                tower.findTarget()
                 if (tower.target) {
                     tower.findTargetVector()
                     tower.fire()
+                } else {
+                    tower.findTarget()
                 }
             }))
 
@@ -218,19 +230,19 @@ const Game: React.FC<GameProps> = ({engine}) => {
                 <img
                     id="towerOneImage"
                     alt="towerOneImage sprite"
-                    src="towerOne.svg"
+                    src="towerOne.png"
                     ref={towerOneImage}
                 />
                 <img
                     id="towerTwoImage"
                     alt="towerTwoImage sprite"
-                    src="towerTwo.svg"
+                    src="towerTwo.png"
                     ref={towerTwoImage}
                 />
                 <img
                     id="towerThreeImage"
                     alt="towerThreeImage sprite"
-                    src="towerThree.svg"
+                    src="towerThree.png"
                     ref={towerThreeImage}
                 />
             </div>
@@ -238,7 +250,7 @@ const Game: React.FC<GameProps> = ({engine}) => {
                 <img
                     id="enemyOneImage"
                     alt="enemyOneImage sprite"
-                    src="enemyOne.svg"
+                    src="enemyOne.png"
                     ref={enemyOneImage}
                 />
             </div>
@@ -246,19 +258,19 @@ const Game: React.FC<GameProps> = ({engine}) => {
                 <img
                     id="projectileOneImage"
                     alt="projectileOneImage sprite"
-                    src="projectileOne.svg"
+                    src="projectileOne.png"
                     ref={projectileOneImage}
                 />
                 <img
                     id="projectileTwoImage"
                     alt="projectileTwoImage sprite"
-                    src="projectileTwo.svg"
+                    src="projectileTwo.png"
                     ref={projectileTwoImage}
                 />
                 <img
                     id="projectileThreeImage"
                     alt="projectileThreeImage sprite"
-                    src="projectileThree.svg"
+                    src="projectileThree.png"
                     ref={projectileThreeImage}
                 />
             </div>
@@ -266,19 +278,19 @@ const Game: React.FC<GameProps> = ({engine}) => {
                 <img
                     id="projectileHitOneImage"
                     alt="projectileHitOneImage sprite"
-                    src="projectileHitOne.svg"
+                    src="projectileHitOne.png"
                     ref={projectileHitOneImage}
                 />
                 <img
                     id="projectileHitTwoImage"
                     alt="projectileHitTwoImage sprite"
-                    src="projectileHitTwo.svg"
+                    src="projectileHitTwo.png"
                     ref={projectileHitTwoImage}
                 />
                 <img
                     id="projectileHitThreeImage"
                     alt="projectileHitThreeImage sprite"
-                    src="projectileHitThree.svg"
+                    src="projectileHitThree.png"
                     ref={projectileHitThreeImage}
                 />
             </div>
@@ -287,6 +299,8 @@ const Game: React.FC<GameProps> = ({engine}) => {
             )}
             <div>
                 <p>
+                    <span>{`Enemies left: ${enemiesLeft}`}</span>&nbsp;
+                    <span>{`Current wave: ${wave}`}</span>&nbsp;
                     <span>{`Lives left: ${lives}`}</span>&nbsp;
                     <span>{`Killed enemies: ${score}`}</span>&nbsp;
                     <span style={{color: `${isEnoughMoney ? 'red' : ''}`}}>{`Money: $${money}`}</span>

@@ -14,6 +14,7 @@ export interface EnemyI {
         strokeStyle: string,
         hp: number,
     }
+    isHaveAttacker?: boolean
 }
 
 class Enemy {
@@ -39,12 +40,18 @@ class Enemy {
             x: Math.floor(Math.random() * 10),
             y: Math.floor(Math.random() * 10) + 1,
         },
+        public isHaveAttacker: EnemyI["isHaveAttacker"] = false
     ) {
         this.enemyParams.rectCenterX = this.enemyParams.width / 2
         this.enemyParams.rectCenterY = this.enemyParams.height / 2
     }
 
     public draw() {
+        // hp bar
+        this.engine.context.setLineDash([])
+        this.engine.context.font = ''
+        this.engine.context.strokeText(`${this.enemyParams.hp}`, this.currentPosition.x, this.currentPosition.y - 5);
+
         if (this.image) {
             this.engine.context!.beginPath()
             this.engine.context?.drawImage(this.image, this.currentPosition.x, this.currentPosition.y, this.enemyParams.width, this.enemyParams.height)

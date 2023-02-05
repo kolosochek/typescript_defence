@@ -17,7 +17,7 @@ type ImageSpriteT = CanvasImageSource
 
 
 // interfaces declaration
-interface WaveGeneratorI {
+export interface WaveGeneratorI {
     waveParams: {
         currentWave: number,
         isWaveInProgress: boolean,
@@ -80,7 +80,6 @@ class WaveGenerator {
 
     public init() {
         if (!this.isInitialized) {
-            console.log('gotcha')
             // fill enemies array
             const enemiesArray = this.repeatEnemy(this.waveParams.enemyCount + (this.waveParams.enemyCountCoefficient * this.waveParams.currentWave))
             this.engine.enemies = [...enemiesArray]
@@ -99,15 +98,15 @@ class WaveGenerator {
     }
 
     public spawnEnemies() {
-
-        // timeout
-        console.log('next wave')
-        console.log(this.waveParams.currentWave)
-
         // fill enemies array
         if (this.waveParams.currentWave < this.waveParams.endWave && !this.waveParams.isWaveInProgress) {
             // increment wave
             this.waveParams.currentWave += 1
+
+            // debug
+            console.log('current wave')
+            console.log(this.waveParams.currentWave)
+            //
 
             const enemiesArray = this.repeatEnemy(this.waveParams.enemyCount + (this.waveParams.enemyCountCoefficient * this.waveParams.currentWave))
             this.engine.enemies = [...enemiesArray]
@@ -185,11 +184,13 @@ class TDEngine {
         public requestIdleCallback: TDEngineI['requestIdleCallback'] = 0,
         public lives: TDEngineI["lives"] = 10,
         public score: TDEngineI["score"] = 0,
-        public money: TDEngineI["money"] = 9100,
+        public money: TDEngineI["money"] = 200,
         public isCanBuild: TDEngineI["isCanBuild"] = false,
         public isGameStarted: TDEngineI["isGameStarted"] = false,
         public isShowGrid: TDEngineI["isShowGrid"] = false,
         public draftTower: TDEngineI["draftTower"] = null,
+        public cursorPosition: TDEngineI['cursorPosition'] = {x: 0, y: 0},
+        public draftBuildCoordinates: twoDCoordinatesI = {x: 0, y: 0},
         public towerSprites: TDEngineI["towerSprites"] = {},
         public enemySprites: TDEngineI["enemySprites"] = {},
         public projectileSprites: TDEngineI["projectileSprites"] = {},
@@ -212,7 +213,8 @@ class TDEngine {
                     price: 25,
                 },
                 projectileParams: {
-                    projectileSpeed: 0.1,
+                    acceleration: 1.2,
+                    projectileSpeed: 0.2,
                     targetX: 0,
                     targetY: 0,
                     rectCenterX: 0,
@@ -238,7 +240,8 @@ class TDEngine {
                     price: 45,
                 },
                 projectileParams: {
-                    projectileSpeed: 0.1,
+                    acceleration: 1.2,
+                    projectileSpeed: 0.2,
                     targetX: 0,
                     targetY: 0,
                     rectCenterX: 0,
@@ -264,19 +267,18 @@ class TDEngine {
                     price: 65,
                 },
                 projectileParams: {
-                    projectileSpeed: 0.3,
+                    acceleration: 1.2,
+                    projectileSpeed: 0.25,
                     targetX: 0,
                     targetY: 0,
                     rectCenterX: 0,
                     rectCenterY: 0,
-                    width: 6,
-                    height: 6,
+                    width: 10,
+                    height: 10,
                     projectileHitAlive: 200,
                 }
             },
         },
-        public cursorPosition: TDEngineI['cursorPosition'] = {x: 0, y: 0},
-        public draftBuildCoordinates: twoDCoordinatesI = {x: 0, y: 0},
         public waveGenerator: TDEngineI['waveGenerator'] = null,
     ) {
         this.waveGenerator = new WaveGenerator(this)
@@ -299,6 +301,7 @@ class TDEngine {
                 this.isShowGrid = false;
             }
         }
+
         if (e.key === "1") {
             if (!this.isCanBuild) {
                 this.buildFirstTower()
@@ -314,6 +317,7 @@ class TDEngine {
                 this.buildThirdTower()
             }
         }
+        // log mode
         if (e.key === "0") {
             // debug
             console.log('this.enemies')
@@ -347,7 +351,7 @@ class TDEngine {
             this.towerSprites.levelOne,
             this.projectileSprites.levelOne,
             this.projectileHitSprites.levelOne,
-            this.findClosestTile(this.cursorPosition),
+            this.draftBuildCoordinates,
             this.towerOneParam.towerParams,
             this.towerOneParam.projectileParams
         )
@@ -360,7 +364,7 @@ class TDEngine {
             this.towerSprites.levelTwo,
             this.projectileSprites.levelTwo,
             this.projectileHitSprites.levelTwo,
-            this.findClosestTile(this.cursorPosition),
+            this.draftBuildCoordinates,
             this.towerTwoParam.towerParams,
             this.towerTwoParam.projectileParams,
         )
@@ -373,7 +377,7 @@ class TDEngine {
             this.towerSprites.levelThree,
             this.projectileSprites.levelThree,
             this.projectileHitSprites.levelThree,
-            this.findClosestTile(this.cursorPosition),
+            this.draftBuildCoordinates,
             this.towerThreeParam.towerParams,
             this.towerThreeParam.projectileParams,
         )
@@ -386,36 +390,50 @@ class TDEngine {
                 * (tile.x - coordinates.x + this.map.mapParams.gridStep)
                 + (tile.y - coordinates.y + this.map.mapParams.gridStep)
                 * (tile.y - coordinates.y + this.map.mapParams.gridStep)
-            if (distance < minDistance) {
+            if (distance <= minDistance) {
                 minDistance = distance
                 this.map.mapParams.closestTile = tile
             }
         }
 
-        return {
+        this.draftBuildCoordinates = {
             x: this.map.mapParams.closestTile.x + this.map.mapParams.gridStep,
-            y: this.map.mapParams.closestTile.y + this.map.mapParams.gridStep
+            y: this.map.mapParams.closestTile.y + this.map.mapParams.gridStep,
         }
+
+        return {
+            x: this.map.mapParams.closestTile.x,
+            y: this.map.mapParams.closestTile.y
+        }
+    }
+
+    highlightTile(coords:twoDCoordinatesI){
+        this.context.beginPath()
+        this.context.strokeStyle = 'green'
+        this.context.setLineDash([])
+        this.context.strokeRect(coords.x, coords.y, this.map.mapParams.gridStep, this.map.mapParams.gridStep)
+        this.context.closePath()
     }
 
     public canvasMouseMoveCallback = (e: MouseEvent) => {
         this.cursorPosition = {x: e.pageX, y: e.pageY}
-        this.draftShowTower({x: e.pageX, y: e.pageY})
+        this.map.mapParams.closestTile = this.findClosestTile(this.cursorPosition)
+        this.draftShowTower()
     }
 
     public canvasClickCallback = (e: MouseEvent) => {
-        this.draftBuildTower({x: e.pageX, y: e.pageY})
+        this.draftBuildTower()
     }
 
     public gameWindowKeydown = (e: KeyboardEvent) => {
         this.manageHotkeys(e)
     }
 
-    public draftShowTower(currentPosition: twoDCoordinatesI) {
+    public draftShowTower() {
         if (this.isCanBuild) {
-            this.draftBuildCoordinates = this.findClosestTile(currentPosition)
+            // show building grid
+            //this.isShowGrid = true
 
-            this.isShowGrid = true
             if (!this.draftTower) {
                 this.draftTower = new Tower(this, undefined, undefined, undefined, this.draftBuildCoordinates)
             } else {
@@ -424,30 +442,45 @@ class TDEngine {
         }
     }
 
-    public draftBuildTower(currentPosition: twoDCoordinatesI) {
+    public draftBuildTower() {
         if (this.isCanBuild && this.money >= this.draftTower.towerParams.price) {
-            this.isShowGrid = false
-            if (!this.draftTower) {
-                this.draftTower = new Tower(this, undefined, undefined, undefined, {
-                    x: currentPosition.x,
-                    y: currentPosition.y
-                })
-            } else {
-                this.draftTower.currentPosition = this.draftBuildCoordinates
-            }
-            this.towers = [
-                ...this.towers,
-                this.draftTower
-            ]
-            // enable attack timer
-            this.draftTower.setAttackInterval()
-            // pop chosen tile from available space to build
-            this.map.mapParams.mapTilesArr = [...this.map.mapParams.mapTilesArr.filter(tile => tile !== this.map.mapParams.closestTile)]
-            // disable building mode
-            this.isCanBuild = false;
-            this.money -= this.draftTower.towerParams.price
-            this.draftTower = null;
+            let isTileFound = false
+            for(const tile of this.map.mapParams.mapTilesArr){
+                if (tile.x === this.map.mapParams.closestTile.x && tile.y === this.map.mapParams.closestTile.y) {
+                    isTileFound = true
+                }
 
+            }
+
+            if (isTileFound){
+                // show building grid
+                //this.isShowGrid = true
+
+                if (!this.draftTower) {
+                    this.draftTower = new Tower(this, undefined, undefined, undefined, this.draftBuildCoordinates)
+                } else {
+                    this.draftTower.currentPosition = this.draftBuildCoordinates
+                }
+
+                // add new tower
+                this.towers = [
+                    ...this.towers,
+                    this.draftTower
+                ]
+
+                // enable attack timer
+                this.draftTower.setAttackInterval()
+
+                // pop chosen tile from available space to build
+                this.map.mapParams.mapTilesArr = this.map.mapParams.mapTilesArr.filter(tile => {
+                    return tile.x !== this.map.mapParams.closestTile.x || tile.y !== this.map.mapParams.closestTile.y
+                })
+                // disable building mode
+                this.isCanBuild = false;
+                this.money -= this.draftTower.towerParams.price
+                this.draftTower = null
+                //this.map.mapParams.closestTile = this.findClosestTile(this.cursorPosition)
+            }
         }
     }
 

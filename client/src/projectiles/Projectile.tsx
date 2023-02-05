@@ -27,7 +27,7 @@ class Projectile {
     public draw() {
         this.engine.context.beginPath()
         if (this.image) {
-            this.engine.context?.drawImage(this.image, this.currentPosition.x, this.currentPosition.y, this.tower.projectileParams.width, this.tower.projectileParams.height)
+            this.engine.context?.drawImage(this.image, Math.floor(this.currentPosition.x), Math.floor(this.currentPosition.y), this.tower.projectileParams.width, this.tower.projectileParams.height)
         } else {
             this.engine.context.strokeStyle = 'black';
             this.engine.context.strokeRect(
@@ -90,20 +90,19 @@ class Projectile {
             this.damage = 0;
         } else if((this.target.enemyParams.hp <= 0) && (this.engine.enemies.indexOf(this.target) > -1) ) {
             // target is dead
-            // release tower target
+            // destroy projectile
             this.engine.projectiles.filter(projectile => this.target === projectile.target)
+            // release tower target
             this.tower.target = null
             // destroy projectile target
             this.target.destroy()
         } else if(this.target.enemyParams.hp <= 0){
             this.tower.target = null
         }
-        //this.currentPosition.x = this.target.currentPosition.x + this.projectileParams.rectCenterX;
-        //this.currentPosition.y = this.target.currentPosition.y + this.projectileParams.rectCenterY;
     }
 
     public destroy() {
-        this.engine.projectiles = this.engine.projectiles.filter((projectile) => this !== projectile)
+        this.engine.projectiles = this.engine.projectiles.filter(projectile => this !== projectile)
     }
 
 }

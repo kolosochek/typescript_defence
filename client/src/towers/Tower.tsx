@@ -19,6 +19,7 @@ export interface TowerI {
         price?: number,
     },
     projectileParams: {
+        acceleration: number,
         projectileSpeed: number,
         targetX: number,
         targetY: number,
@@ -60,6 +61,7 @@ class Tower {
             price: 15,
         },
         public projectileParams: TowerI['projectileParams'] = {
+            acceleration: 1.2,
             projectileSpeed: 0.1,
             targetX: 0,
             targetY: 0,
@@ -84,7 +86,7 @@ class Tower {
         // draw tower object
         if (this.image) {
             this.engine.context.translate(this.currentPosition.x - this.towerParams.rectCenterX, this.currentPosition.y - this.towerParams.rectCenterY);
-            this.engine.context.rotate(this.towerParams.firingAngle)
+            this.engine.context.rotate(Math.floor(this.towerParams.firingAngle))
             //this.engine.context?.drawImage(this.image, this.currentPosition.x - this.towerParams.width, this.currentPosition.y - this.towerParams.height, this.towerParams.width, this.towerParams.height)
             this.engine.context?.drawImage(this.image, -this.towerParams.rectCenterX, -this.towerParams.rectCenterY, this.towerParams.width, this.towerParams.height)
         } else {
@@ -133,7 +135,9 @@ class Tower {
         // draw tower 2d representation
         this.draw()
         // draw tower range
-        this.drawTowerRange()
+        if(this.engine.isCanBuild){
+            this.drawTowerRange()
+        }
     }
 
     public isEnemyInRange(enemy: Enemy) {
@@ -142,6 +146,16 @@ class Tower {
             + (enemy.currentPosition.y - this.currentPosition.y + this.towerParams.height)
             * (enemy.currentPosition.y - this.currentPosition.y + this.towerParams.height)
         if (distance < (this.towerParams.attackRange * this.towerParams.attackRange)) {
+            /*
+            if (!enemy.isHaveAttacker){
+                enemy.isHaveAttacker = true
+                this.target = enemy
+                return true
+            } else {
+                return false
+            }
+             */
+            enemy.isHaveAttacker = true
             this.target = enemy
             return true
         }
