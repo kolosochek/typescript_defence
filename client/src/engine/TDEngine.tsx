@@ -93,6 +93,7 @@ class WaveGenerator {
             })
 
             this.isInitialized = true;
+            this.waveParams.currentWave = 1;
             this.waveParams.isWaveInProgress = true;
         }
     }
@@ -147,6 +148,7 @@ export interface TDEngineI {
     isCanBuild: boolean,
     isGameStarted: boolean,
     isShowGrid: boolean,
+    isNotEnoughMoney: boolean,
     canvasMouseMoveEvent: EventListener | null,
     draftTower: Tower | null,
     cursorPosition: twoDCoordinatesI,
@@ -188,6 +190,7 @@ class TDEngine {
         public isCanBuild: TDEngineI["isCanBuild"] = false,
         public isGameStarted: TDEngineI["isGameStarted"] = false,
         public isShowGrid: TDEngineI["isShowGrid"] = false,
+        public isNotEnoughMoney: TDEngineI["isNotEnoughMoney"] = false,
         public draftTower: TDEngineI["draftTower"] = null,
         public cursorPosition: TDEngineI['cursorPosition'] = {x: 0, y: 0},
         public draftBuildCoordinates: twoDCoordinatesI = {x: 0, y: 0},
@@ -285,6 +288,16 @@ class TDEngine {
         this.idleTimeout = 250;
     }
 
+    public restartGame(){
+        this.enemies = []
+        this.towers = []
+        this.projectiles = []
+        this.money = 200
+        this.lives = 10
+        this.score = 0
+        this.waveGenerator.isInitialized = false
+    }
+
     public clearMemory(){
         this.enemies = []
         this.projectiles = []
@@ -316,6 +329,8 @@ class TDEngine {
             if (!this.isCanBuild) {
                 this.buildThirdTower()
             }
+        }
+        if (e.key === "4") {
         }
         // log mode
         if (e.key === "0") {
@@ -443,43 +458,49 @@ class TDEngine {
     }
 
     public draftBuildTower() {
-        if (this.isCanBuild && this.money >= this.draftTower.towerParams.price) {
-            let isTileFound = false
-            for(const tile of this.map.mapParams.mapTilesArr){
-                if (tile.x === this.map.mapParams.closestTile.x && tile.y === this.map.mapParams.closestTile.y) {
-                    isTileFound = true
+        if (this.isCanBuild) {
+            if (this.money >= this.draftTower.towerParams.price) {
+                this.isNotEnoughMoney = false
+
+                let isTileFound = false
+                for(const tile of this.map.mapParams.mapTilesArr){
+                    if (tile.x === this.map.mapParams.closestTile.x && tile.y === this.map.mapParams.closestTile.y) {
+                        isTileFound = true
+                    }
+
                 }
 
-            }
+                if (isTileFound){
+                    // show building grid
+                    //this.isShowGrid = true
 
-            if (isTileFound){
-                // show building grid
-                //this.isShowGrid = true
+                    if (!this.draftTower) {
+                        this.draftTower = new Tower(this, undefined, undefined, undefined, this.draftBuildCoordinates)
+                    } else {
+                        this.draftTower.currentPosition = this.draftBuildCoordinates
+                    }
 
-                if (!this.draftTower) {
-                    this.draftTower = new Tower(this, undefined, undefined, undefined, this.draftBuildCoordinates)
-                } else {
-                    this.draftTower.currentPosition = this.draftBuildCoordinates
+                    // add new tower
+                    this.towers = [
+                        ...this.towers,
+                        this.draftTower
+                    ]
+
+                    // enable attack timer
+                    this.draftTower.setAttackInterval()
+
+                    // pop chosen tile from available space to build
+                    this.map.mapParams.mapTilesArr = this.map.mapParams.mapTilesArr.filter(tile => {
+                        return tile.x !== this.map.mapParams.closestTile.x || tile.y !== this.map.mapParams.closestTile.y
+                    })
+                    // disable building mode
+                    this.isCanBuild = false;
+                    this.money -= this.draftTower.towerParams.price
+                    this.draftTower = null
+                    //this.map.mapParams.closestTile = this.findClosestTile(this.cursorPosition)
                 }
-
-                // add new tower
-                this.towers = [
-                    ...this.towers,
-                    this.draftTower
-                ]
-
-                // enable attack timer
-                this.draftTower.setAttackInterval()
-
-                // pop chosen tile from available space to build
-                this.map.mapParams.mapTilesArr = this.map.mapParams.mapTilesArr.filter(tile => {
-                    return tile.x !== this.map.mapParams.closestTile.x || tile.y !== this.map.mapParams.closestTile.y
-                })
-                // disable building mode
-                this.isCanBuild = false;
-                this.money -= this.draftTower.towerParams.price
-                this.draftTower = null
-                //this.map.mapParams.closestTile = this.findClosestTile(this.cursorPosition)
+            } else {
+                this.isNotEnoughMoney = true
             }
         }
     }

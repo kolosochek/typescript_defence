@@ -1,6 +1,5 @@
 import React, {PropsWithChildren, useEffect, useRef, useState} from 'react';
-import TDEngine, {WaveGeneratorI} from "../engine/TDEngine";
-import Tower from "../towers/Tower";
+import TDEngine, {TDEngineI, WaveGeneratorI} from "../engine/TDEngine";
 
 export interface GameProps extends PropsWithChildren {
     engine: TDEngine,
@@ -36,22 +35,24 @@ const Game: React.FC<GameProps> = ({engine}) => {
     const [money, setMoney] = useState<GameProps["money"]>(engine.money)
     const [wave, setWave] = useState<GameProps["wave"]>(engine.waveGenerator.waveParams.currentWave)
     const [enemiesLeft, setEnemiesLeft] = useState<GameProps["wave"]>(engine.enemies.length)
-    const [isEnoughMoney, setIsEnoughMoney] = useState<GameProps["isEnoughMoney"]>(false)
+    const [countdownTimer, setCountdownTimer] = useState(Math.floor(engine.waveGenerator.waveTimeoutBetweenWaves / 1000))
+    const [isCountdown, setIsCountdown] = useState(false)
+    const [isNotEnoughMoney, setIsNotEnoughMoney] = useState<TDEngineI["isNotEnoughMoney"]>(engine.isNotEnoughMoney)
     const [isGameOver, setIsGameOver] = useState<boolean>(false)
     const [isGameStarted, setIsGameStarted] = useState<boolean>(false)
 
 
     const gameLoop = () => {
-        // draw level map
-        engine.map?.drawMap()
 
         if (engine.isGameStarted) {
+            // draw level map
+            engine.map?.drawMap()
 
             if (engine.lives > 0) {
                 engine.clearCanvas()
 
                 // draw map grid
-                if(engine.isShowGrid){
+                if (engine.isShowGrid) {
                     engine.map.drawGrid()
                 }
 
@@ -106,17 +107,28 @@ const Game: React.FC<GameProps> = ({engine}) => {
             setMoney(engine.money)
             setWave(engine.waveGenerator.waveParams.currentWave)
             setEnemiesLeft(engine.enemies.length)
+            setIsNotEnoughMoney(engine.isNotEnoughMoney)
+
 
             // enemy init || move
-            if(!engine.waveGenerator.isInitialized){
+            if (!engine.waveGenerator.isInitialized) {
                 engine.waveGenerator.init()
             }
 
             // isWaveInProgress?
-            if(engine.lives > 0 && engine.enemies.length === 0 && engine.waveGenerator.waveParams.isWaveInProgress) {
+            if (engine.lives > 0 && engine.enemies.length === 0 && engine.waveGenerator.waveParams.isWaveInProgress) {
                 engine.waveGenerator.waveParams.isWaveInProgress = false;
                 engine.clearMemory()
                 if (!engine.waveGenerator.waveTimerBetweenWaves) {
+                    if (!isCountdown && countdownTimer) {
+                        setIsCountdown(true)
+                        setInterval(() => {
+                            setCountdownTimer(countdownTimer-1)
+                        }, 1000)
+                    } else {
+                        setIsCountdown(false)
+                        setCountdownTimer(Math.floor(engine.waveGenerator.waveTimeoutBetweenWaves / 1000))
+                    }
                     setTimeout(() => {
                         engine.waveGenerator.spawnEnemies()
                     }, engine.waveGenerator.waveTimeoutBetweenWaves)
@@ -200,7 +212,7 @@ const Game: React.FC<GameProps> = ({engine}) => {
         /* /LOAD SPRITES */
 
         // draw level map
-        engine.map?.drawMap()
+        //engine.map?.drawMap()
 
         // game start
         if (engine.isGameStarted) {
@@ -303,7 +315,8 @@ const Game: React.FC<GameProps> = ({engine}) => {
                     <span>{`Current wave: ${wave}`}</span>&nbsp;
                     <span>{`Lives left: ${lives}`}</span>&nbsp;
                     <span>{`Killed enemies: ${score}`}</span>&nbsp;
-                    <span style={{color: `${isEnoughMoney ? 'red' : ''}`}}>{`Money: $${money}`}</span>
+                    <span style={{color: `${isNotEnoughMoney ? 'red' : ''}`}}>{`Money: $${money}`}</span>&nbsp;
+                    {isCountdown && <span style={{color: 'green'}}>{`Countdown: ${countdownTimer}`}</span>}
                 </p>
             </div>
             <hr/>
@@ -311,67 +324,31 @@ const Game: React.FC<GameProps> = ({engine}) => {
                 <button onClick={() => {
                     engine.isGameStarted = true;
                     setIsGameStarted(true)
-                }}>Start teh game
+                }}>Start
                 </button>
                 <button onClick={() => {
                     engine.isGameStarted = false;
                     setIsGameStarted(false)
-                }}>End teh game
+                }}>Pause
+                </button>
+                <button onClick={() => {
+                    engine.restartGame()
+                    engine.isGameStarted = true;
+                    setIsGameStarted(true)
+                }}>Restart
                 </button>
             </div>
             <div>
                 <button onClick={() => {
-                    if (money >= engine.towerOneParam.towerParams.price) {
-                        setIsEnoughMoney(false)
-                        engine.isCanBuild = true
-                        engine.draftTower = new Tower(
-                            engine,
-                            engine.towerSprites.levelOne,
-                            engine.projectileSprites.levelOne,
-                            engine.projectileHitSprites.levelOne,
-                            engine.cursorPosition,
-                            engine.towerOneParam.towerParams,
-                            engine.towerOneParam.projectileParams
-                        )
-                    } else {
-                        setIsEnoughMoney(true)
-                    }
+                    engine.buildFirstTower()
                 }}>Build 1 level tower(${engine.towerOneParam.towerParams.price})
                 </button>
                 <button onClick={() => {
-                    if (money >= engine.towerTwoParam.towerParams.price) {
-                        setIsEnoughMoney(false)
-                        engine.isCanBuild = true
-                        engine.draftTower = new Tower(
-                            engine,
-                            engine.towerSprites.levelTwo,
-                            engine.projectileSprites.levelTwo,
-                            engine.projectileHitSprites.levelTwo,
-                            engine.cursorPosition,
-                            engine.towerTwoParam.towerParams,
-                            engine.towerTwoParam.projectileParams,
-                        )
-                    } else {
-                        setIsEnoughMoney(true)
-                    }
+                    engine.buildSecondTower()
                 }}>Build 2 level tower(${engine.towerTwoParam.towerParams.price})
                 </button>
                 <button onClick={() => {
-                    if (money >= engine.towerThreeParam.towerParams.price) {
-                        setIsEnoughMoney(false)
-                        engine.isCanBuild = true
-                        engine.draftTower = new Tower(
-                            engine,
-                            engine.towerSprites.levelThree,
-                            engine.projectileSprites.levelThree,
-                            engine.projectileHitSprites.levelThree,
-                            engine.cursorPosition,
-                            engine.towerThreeParam.towerParams,
-                            engine.towerThreeParam.projectileParams,
-                        )
-                    } else {
-                        setIsEnoughMoney(true)
-                    }
+                    engine.buildThirdTower()
                 }}>Build 3 level tower(${engine.towerThreeParam.towerParams.price})
                 </button>
             </div>
