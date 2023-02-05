@@ -59,13 +59,6 @@ class Map {
         for (let x = this.mapParams.rightBorder; x <= this.mapParams.width; x += this.mapParams.gridStep){
             this.mapParams.mapTilesArr = this.mapParams.mapTilesArr.filter(tile => tile.x !== x || tile.y !== this.mapParams.bottomBorder + this.mapParams.gridStep)
         }
-
-        // debug
-        console.log(`this.mapParams.mapTilesArr`)
-        console.log(this.mapParams.mapTilesArr)
-        console.log(`this.mapParams.mapTilesArr.length`)
-        console.log(this.mapParams.mapTilesArr.length)
-        //
     }
 
 

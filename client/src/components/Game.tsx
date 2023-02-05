@@ -1,7 +1,6 @@
 import React, {PropsWithChildren, useEffect, useRef, useState} from 'react';
 import TDEngine from "../engine/TDEngine";
 import Tower from "../towers/Tower";
-import Enemy from "../enemies/Enemy";
 
 export interface GameProps extends PropsWithChildren {
     engine: TDEngine,
@@ -37,37 +36,35 @@ const Game: React.FC<GameProps> = ({engine}) => {
     const [isEnoughMoney, setIsEnoughMoney] = useState<GameProps["isEnoughMoney"]>(false)
     const [isGameOver, setIsGameOver] = useState<boolean>(false)
     const [isGameStarted, setIsGameStarted] = useState<boolean>(false)
-    // safari hotfix
-    engine.requestIdleCallback = 0
-    engine.animationFrameId = 0
 
 
     const gameLoop = () => {
         // draw level map
         engine.map?.drawMap()
 
-        if (engine.lives > 0) {
-            engine.clearCanvas()
-            // draw map grid
-            engine.map.drawGrid()
+        if (engine.isGameStarted) {
+            if (engine.lives > 0) {
+                engine.clearCanvas()
 
-            // draw level map
-            engine.map?.drawMap()
-
-            // draw towers
-            engine.towers?.forEach((tower, index) => {
-                tower.drawTower()
-            })
-
-            // build mode
-            if (engine.isCanBuild) {
-                if (engine.draftTower) {
-                    engine.draftTower.draftBuildTower()
+                // draw map grid
+                if(engine.isShowGrid){
+                    engine.map.drawGrid()
                 }
-            }
 
-            if (isGameStarted) {
-                engine.isGameStarted = true
+                // draw level map
+                engine.map?.drawMap()
+
+                // draw towers
+                engine.towers?.forEach((tower, index) => {
+                    tower.drawTower()
+                })
+
+                // build mode
+                if (engine.isCanBuild) {
+                    if (engine.draftTower) {
+                        engine.draftTower.draftBuildTower()
+                    }
+                }
                 // draw enemies
                 engine.enemies?.forEach((enemy, index) => {
                     enemy.move()
@@ -80,84 +77,82 @@ const Game: React.FC<GameProps> = ({engine}) => {
                     })
                 }
             } else {
-                engine.isGameStarted = false
+                // GAME IS OVER!
+                setIsGameOver(true)
             }
 
             // request animation frame
             engine.animationFrameId = requestAnimationFrame(gameLoop)
         } else {
-            // GAME IS OVER!
-            setIsGameOver(true)
             // cancel browser idle callback fn
-            cancelIdleCallback(engine.requestIdleCallback)
+            cancelAnimationFrame(engine.animationFrameId)
         }
     }
 
     const gameLoopLogic = () => {
-        // update game results
-        setScore(engine.score)
-        setLives(engine.lives)
-        setMoney(engine.money)
+        if (engine.isGameStarted) {
+            // update game results
+            setScore(engine.score)
+            setLives(engine.lives)
+            setMoney(engine.money)
 
-
-
-        // draw enemies
-        engine.enemies?.forEach((enemy, index) => {
-            enemy.drawEnemy({
-                x: -enemy.enemyParams.spaceBetweenEnemies * engine.enemies?.length! + (index * enemy.enemyParams.spaceBetweenEnemies),
-                y: 0
-            })
-        })
-
-
-        // search n destroy
-        engine.towers?.forEach((tower => {
-            tower.findTarget()
-            if (tower.target) {
-                tower.findTargetVector()
-                tower.fire()
+            // enemy init || move
+            if(!engine.waveGenerator.isInitialized){
+                engine.waveGenerator.init()
             }
-        }))
 
-        // destroy projectiles without target
-        if (engine.projectiles) {
-            engine.projectiles?.forEach((projectile) => {
-                if (projectile.tower.target === null) {
-                    engine.projectiles.filter(proj => projectile !== proj)
+            // isWaveInProgress?
+            if(engine.lives > 0 && engine.enemies.length == 0 && engine.waveGenerator.waveParams.isWaveInProgress) {
+                engine.waveGenerator.waveParams.isWaveInProgress = false;
+                engine.clearMemory()
+                if (!engine.waveGenerator.waveTimerBetweenWaves) {
+                    setTimeout(() => {
+                        engine.waveGenerator.spawnEnemies()
+                    }, engine.waveGenerator.waveTimeoutBetweenWaves)
                 }
-            })
-        }
+            }
 
-        // request callback when browser is idling
-        engine.requestIdleCallback = requestIdleCallback(gameLoopLogic, {timeout: engine.idleTimeout})
+            // search n destroy
+            engine.towers?.forEach((tower => {
+                tower.findTarget()
+                if (tower.target) {
+                    tower.findTargetVector()
+                    tower.fire()
+                }
+            }))
+
+            // destroy projectiles without target
+            if (engine.projectiles) {
+                engine.projectiles?.forEach((projectile) => {
+                    if (projectile.tower.target === null) {
+                        engine.projectiles.filter(proj => projectile !== proj)
+                    }
+                })
+            }
+
+            // request callback when browser is idling
+            engine.requestIdleCallback = requestIdleCallback(gameLoopLogic, {timeout: engine.idleTimeout})
+        } else {
+            cancelIdleCallback(engine.requestIdleCallback)
+        }
     }
 
     useEffect(() => {
-        const context = canvas.current?.getContext('2d')
-        // bind 2d canvas render context to the engine HoC
-        engine.setContext(context!)
+        if (!engine.context) {
+            engine.setContext(canvas.current?.getContext('2d'))
+        }
 
         /* BUILD MODE */
         // add canvas mousemove event listener
-        canvas.current.addEventListener('mousemove', (e: MouseEvent) => {
-            engine.draftShowTower({x: e.pageX, y: e.pageY})
-        })
+        canvas.current.addEventListener('mousemove', engine.canvasMouseMoveCallback)
         // add canvas mouse click event listener
-        canvas.current.addEventListener('click', (e: MouseEvent) => {
-            engine.draftBuildTower({x: e.pageX, y: e.pageY})
-        })
+        canvas.current.addEventListener('click', engine.canvasClickCallback)
         // add escape hotkey to cancel building mode
-        gameWindow.current.addEventListener('keydown', (e:KeyboardEvent) => {
-            // debug
-            console.log(e)
-            console.log(`e`)
-            //
-            engine.manageHotkeys(e)
-        })
+        gameWindow.current.addEventListener('keydown', engine.gameWindowKeydown)
         /* /BUILD MODE */
 
         /* LOAD SPRITES */
-        if(!Object.keys(engine.towerSprites).length) {
+        if (!Object.keys(engine.towerSprites).length) {
             // tower sprites
             engine.towerSprites = {
                 levelOne: towerOneImage.current,
@@ -166,7 +161,7 @@ const Game: React.FC<GameProps> = ({engine}) => {
             }
         }
 
-        if(!Object.keys(engine.projectileSprites).length) {
+        if (!Object.keys(engine.projectileSprites).length) {
             // projectile sprites
             engine.projectileSprites = {
                 levelOne: projectileOneImage.current,
@@ -175,7 +170,7 @@ const Game: React.FC<GameProps> = ({engine}) => {
             }
         }
 
-        if(!Object.keys(engine.projectileHitSprites).length) {
+        if (!Object.keys(engine.projectileHitSprites).length) {
             // projectile hit sprites
             engine.projectileHitSprites = {
                 levelOne: projectileHitOneImage.current,
@@ -184,21 +179,24 @@ const Game: React.FC<GameProps> = ({engine}) => {
             }
         }
 
-        if(!Object.keys(engine.enemies).length) {
+        if (!Object.keys(engine.enemies).length) {
             // projectile hit sprites
             engine.enemySprites = {
                 levelOne: enemyOneImage.current,
             }
         }
-
-
         /* /LOAD SPRITES */
 
+        // draw level map
+        engine.map?.drawMap()
 
         // game start
-        if (isGameStarted) {
+        if (engine.isGameStarted) {
             engine.animationFrameId = requestAnimationFrame(gameLoop)
             engine.requestIdleCallback = requestIdleCallback(gameLoopLogic, {timeout: engine.idleTimeout})
+        } else {
+            cancelAnimationFrame(engine.animationFrameId)
+            cancelIdleCallback(engine.requestIdleCallback)
         }
 
     }, [isGameStarted])
@@ -296,8 +294,16 @@ const Game: React.FC<GameProps> = ({engine}) => {
             </div>
             <hr/>
             <div>
-                <button onClick={() => setIsGameStarted(true)}>Start teh game</button>
-                <button onClick={() => setIsGameStarted(false)}>End teh game</button>
+                <button onClick={() => {
+                    engine.isGameStarted = true;
+                    setIsGameStarted(true)
+                }}>Start teh game
+                </button>
+                <button onClick={() => {
+                    engine.isGameStarted = false;
+                    setIsGameStarted(false)
+                }}>End teh game
+                </button>
             </div>
             <div>
                 <button onClick={() => {

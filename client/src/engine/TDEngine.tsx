@@ -30,6 +30,7 @@ interface WaveGeneratorI {
         enemyCount: number,
     }
     waveTimerBetweenWaves: NodeJS.Timer,
+    waveTimeoutBetweenWaves: number,
 }
 
 class WaveGenerator {
@@ -48,6 +49,7 @@ class WaveGenerator {
             enemyCount: 15,
         },
         public waveTimerBetweenWaves: WaveGeneratorI["waveTimerBetweenWaves"] = null,
+        public waveTimeoutBetweenWaves: WaveGeneratorI["waveTimeoutBetweenWaves"] = 5000,
     ) {
 
     }
@@ -63,9 +65,9 @@ class WaveGenerator {
                         width: 20,
                         height: 20,
                         spaceBetweenEnemies: 35,
-                        speed: 0.65 + this.waveParams.speedCoefficient,
-                        bounty: 5 + this.waveParams.enemyBountyCoefficient,
-                        hp: 100 + this.waveParams.hpCoefficient,
+                        speed: 0.65 + (this.waveParams.speedCoefficient * this.waveParams.currentWave),
+                        bounty: 5 + (this.waveParams.enemyBountyCoefficient * this.waveParams.currentWave),
+                        hp: 100 + (this.waveParams.hpCoefficient * this.waveParams.currentWave),
                         strokeStyle: 'red',
                         rectCenterX: 0,
                         rectCenterY: 0,
@@ -78,6 +80,7 @@ class WaveGenerator {
 
     public init() {
         if (!this.isInitialized) {
+            console.log('gotcha')
             // fill enemies array
             const enemiesArray = this.repeatEnemy(this.waveParams.enemyCount + (this.waveParams.enemyCountCoefficient * this.waveParams.currentWave))
             this.engine.enemies = [...enemiesArray]
@@ -96,12 +99,16 @@ class WaveGenerator {
     }
 
     public spawnEnemies() {
-        // debug
-        console.log(`this.waveParams.currentWave`)
+
+        // timeout
+        console.log('next wave')
         console.log(this.waveParams.currentWave)
-        //
+
         // fill enemies array
         if (this.waveParams.currentWave < this.waveParams.endWave && !this.waveParams.isWaveInProgress) {
+            // increment wave
+            this.waveParams.currentWave += 1
+
             const enemiesArray = this.repeatEnemy(this.waveParams.enemyCount + (this.waveParams.enemyCountCoefficient * this.waveParams.currentWave))
             this.engine.enemies = [...enemiesArray]
         }
@@ -113,6 +120,10 @@ class WaveGenerator {
                 y: 0
             })
         })
+
+        // increment wave
+        this.waveTimerBetweenWaves = null
+        this.waveParams.isWaveInProgress = true
     }
 
 }
@@ -272,6 +283,14 @@ class TDEngine {
         this.idleTimeout = 250;
     }
 
+    public clearMemory(){
+        this.enemies = []
+        this.projectiles = []
+        for (let tower of this.towers){
+            tower.target = null
+        }
+    }
+
     public manageHotkeys(e: KeyboardEvent) {
         // cancel building mode
         if (e.key === "Escape") {
@@ -294,6 +313,30 @@ class TDEngine {
             if (!this.isCanBuild) {
                 this.buildThirdTower()
             }
+        }
+        if (e.key === "0") {
+            // debug
+            console.log('this.enemies')
+            console.log(this.enemies)
+            console.log(this.enemies.length)
+            console.log('----')
+            console.log(`this.towers`)
+            console.log(this.towers)
+            console.log(this.towers.length)
+            console.log('----')
+            console.log(`this.projectiles`)
+            console.log(this.projectiles)
+            console.log(this.projectiles.length)
+            console.log('---')
+            console.log(`this.lives`)
+            console.log(this.lives)
+            console.log(`this.money`)
+            console.log(this.money)
+            console.log('---')
+            console.log(`this.waveGenerator.waveParams`)
+            console.log(this.waveGenerator.waveParams)
+            console.log('---')
+            //
         }
     }
 
@@ -356,6 +399,7 @@ class TDEngine {
     }
 
     public canvasMouseMoveCallback = (e: MouseEvent) => {
+        this.cursorPosition = {x: e.pageX, y: e.pageY}
         this.draftShowTower({x: e.pageX, y: e.pageY})
     }
 
@@ -368,8 +412,6 @@ class TDEngine {
     }
 
     public draftShowTower(currentPosition: twoDCoordinatesI) {
-        this.cursorPosition = currentPosition
-
         if (this.isCanBuild) {
             this.draftBuildCoordinates = this.findClosestTile(currentPosition)
 
