@@ -106,6 +106,7 @@ class Tower {
     }
 
     public setAttackInterval = () => {
+        this.attackIntervalTimer = null
         // initial build fire
         this.isCanFire = true;
         // then set attack interval
@@ -115,27 +116,27 @@ class Tower {
     }
 
     public drawTowerRange() {
-        this.engine.context?.beginPath()
+        this.engine.context.beginPath()
         this.engine.context.lineWidth = 0.75
-        this.engine.context.setLineDash([5, 15])
-        this.engine.context!.strokeStyle = '#000'
+        this.engine.context.setLineDash([10, 15])
+        this.engine.context.strokeStyle = this.towerParams.strokeStyle
         // draw tower range
-        this.engine.context?.arc(
+        this.engine.context.arc(
             this.currentPosition.x - this.towerParams.width / 2,
             this.currentPosition.y - this.towerParams.height / 2,
             this.towerParams.attackRange,
             0,
             360
         )
-        this.engine.context?.stroke()
-        this.engine.context?.closePath()
+        this.engine.context.stroke()
+        this.engine.context.closePath()
     }
 
     public drawTower() {
         // draw tower 2d representation
         this.draw()
         // draw tower range
-        if(this.engine.isCanBuild){
+        if (this.engine.isCanBuild) {
             this.drawTowerRange()
         }
     }
@@ -146,30 +147,23 @@ class Tower {
             + (enemy.currentPosition.y - this.currentPosition.y + this.towerParams.height)
             * (enemy.currentPosition.y - this.currentPosition.y + this.towerParams.height)
         if (distance < (this.towerParams.attackRange * this.towerParams.attackRange)) {
-            /*
-            if (!enemy.isHaveAttacker){
-                enemy.isHaveAttacker = true
-                this.target = enemy
-                return true
-            } else {
-                return false
-            }
-             */
-            enemy.isHaveAttacker = true
             this.target = enemy
             return true
+        } else {
+            return false
         }
-        return false
     }
 
     public findTarget() {
-        if (!this.target) {
-            this.engine.enemies?.forEach((enemy) => {
-                return this.isEnemyInRange(enemy)
-            })
-        } else {
-            if (this.target && !this.isEnemyInRange(this.target!)) {
-                this.target = null;
+        if (this.engine.enemies.length) {
+            if (!this.target) {
+                this.engine.enemies?.forEach((enemy) => {
+                    return this.isEnemyInRange(enemy)
+                })
+            } else {
+                if (!this.isEnemyInRange(this.target)) {
+                    this.target = null;
+                }
             }
         }
     }
@@ -179,19 +173,13 @@ class Tower {
         if (!this.target) {
             return;
         }
-        const xDistance = this.target.currentPosition.x - this.currentPosition.x;
-        const yDistance = this.target.currentPosition.y - this.currentPosition.y;
+        const xDistance = this.target.currentPosition.x - this.currentPosition.x + this.target.enemyParams.rectCenterX;
+        const yDistance = this.target.currentPosition.y - this.currentPosition.y + this.target.enemyParams.rectCenterY;
         this.towerParams.firingAngle = Math.atan2(yDistance, xDistance) + Math.PI; //* 180 / Math.PI
-        // shoot projectiles from sides of the tower
-        const distance = Math.sqrt((xDistance * xDistance) + (yDistance * yDistance));
-        this.towerParams.firingX = this.currentPosition.x + this.towerParams.attackRange * xDistance / distance;
-        this.towerParams.firingY = this.currentPosition.y + this.towerParams.attackRate * yDistance / distance;
     }
 
     public fire() {
         const fireFromCoordinates = {
-            //x: this.towerParams.firingX,
-            //y: this.towerParams.firingY,
             x: this.currentPosition.x - this.towerParams.rectCenterX,
             y: this.currentPosition.y - this.towerParams.rectCenterY,
         }

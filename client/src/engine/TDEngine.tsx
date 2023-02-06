@@ -2,6 +2,7 @@ import Enemy from "../enemies/Enemy";
 import Tower, {TowerI} from "../towers/Tower";
 import Map from "../maps/Map";
 import Projectile from "../projectiles/Projectile";
+import {clearInterval} from "timers";
 
 // utilities declaration
 type PartialRecord<K extends keyof any, T> = {
@@ -10,9 +11,10 @@ type PartialRecord<K extends keyof any, T> = {
 
 // types declaration
 type TowerNameT = "levelOne" | "levelTwo" | "levelThree"
+type EnemyNameT = "levelOne" | "levelTwo" | "levelThree" | "fast" | "slow" | "boss"
 type TowerSpriteT = PartialRecord<TowerNameT, ImageSpriteT | null>
-type EnemySpriteT = PartialRecord<TowerNameT, ImageSpriteT | null>
 type ProjectileSpriteT = PartialRecord<TowerNameT, ImageSpriteT | null>
+type EnemySpriteT = PartialRecord<EnemyNameT, ImageSpriteT | null>
 type ImageSpriteT = CanvasImageSource
 
 
@@ -31,6 +33,8 @@ export interface WaveGeneratorI {
     }
     waveTimerBetweenWaves: NodeJS.Timer,
     waveTimeoutBetweenWaves: number,
+    waveCountdownTimer: NodeJS.Timer,
+    waveCountdown: number,
 }
 
 class WaveGenerator {
@@ -40,40 +44,104 @@ class WaveGenerator {
         public waveParams: WaveGeneratorI["waveParams"] = {
             currentWave: 1,
             isWaveInProgress: false,
-            hpCoefficient: 20,
-            speedCoefficient: 0.05,
+            hpCoefficient: engine.initialGameParams.hpCoefficient,
+            speedCoefficient: engine.initialGameParams.speedCoefficient,
             enemyBountyCoefficient: 2,
             enemyCountCoefficient: 5,
-            endWave: 10,
+            endWave: engine.initialGameParams.endWave,
             startWave: 1,
-            enemyCount: 15,
+            enemyCount: engine.initialGameParams.enemiesPerWave,
         },
         public waveTimerBetweenWaves: WaveGeneratorI["waveTimerBetweenWaves"] = null,
         public waveTimeoutBetweenWaves: WaveGeneratorI["waveTimeoutBetweenWaves"] = 5000,
+        public waveCountdownTimer: WaveGeneratorI["waveCountdownTimer"] = null,
+        public waveCountdown: WaveGeneratorI["waveCountdown"] = 0,
     ) {
+        this.waveCountdown = Math.floor(this.waveTimeoutBetweenWaves / 1000)
+    }
 
+    public countdown() {
+        if (!this.waveCountdownTimer) {
+            this.waveCountdownTimer = setInterval(() => {
+                if (this.waveCountdown > 0) {
+                    this.waveCountdown -= 1
+                } else {
+                    //clearInterval(this.waveCountdownTimer)
+                    this.waveCountdownTimer = null
+                    //this.waveCountdown = Math.floor(this.waveTimeoutBetweenWaves / 1000)
+                }
+            }, 1000)
+        }
     }
 
     public repeatEnemy = (times) => {
         let enemiesArray = []
         for (let iteration = 0; iteration < times; iteration++) {
-            enemiesArray.push(
-                new Enemy(
-                    this.engine,
-                    this.engine.enemySprites.levelOne,
-                    {
-                        width: 20,
-                        height: 20,
-                        spaceBetweenEnemies: 35,
-                        speed: 0.65 + (this.waveParams.speedCoefficient * this.waveParams.currentWave),
-                        bounty: 5 + (this.waveParams.enemyBountyCoefficient * this.waveParams.currentWave),
-                        hp: 100 + (this.waveParams.hpCoefficient * this.waveParams.currentWave),
-                        strokeStyle: 'red',
-                        rectCenterX: 0,
-                        rectCenterY: 0,
-                    }
+            // boss enemy
+            if (iteration === 10) {
+                enemiesArray.push(
+                    new Enemy(
+                        this.engine,
+                        this.engine.enemySprites.boss,
+                        {
+                            width: 25,
+                            height: 25,
+                            spaceBetweenEnemies: 10,
+                            speed: 0.30 + (this.waveParams.speedCoefficient * this.waveParams.currentWave),
+                            bounty: 15 + (this.waveParams.enemyBountyCoefficient * this.waveParams.currentWave),
+                            hp: 1500 + (this.waveParams.hpCoefficient * this.waveParams.currentWave),
+                        },
+                    )
                 )
-            )
+            } else if (iteration % 10 === 0) {
+                // slow enemy
+                enemiesArray.push(
+                    new Enemy(
+                        this.engine,
+                        this.engine.enemySprites.slow,
+                        {
+                            width: 25,
+                            height: 25,
+                            spaceBetweenEnemies: 25,
+                            speed: 0.4 + (this.waveParams.speedCoefficient * this.waveParams.currentWave),
+                            bounty: 8 + (this.waveParams.enemyBountyCoefficient * this.waveParams.currentWave),
+                            hp: 250 + (this.waveParams.hpCoefficient * this.waveParams.currentWave),
+                        }
+                    )
+                )
+            } else if (iteration % 5 === 0) {
+                // fast enemy
+                enemiesArray.push(
+                    new Enemy(
+                        this.engine,
+                        this.engine.enemySprites.fast,
+                        {
+                            width: 20,
+                            height: 20,
+                            spaceBetweenEnemies: 35,
+                            speed: 1 + (this.waveParams.speedCoefficient * this.waveParams.currentWave),
+                            bounty: 7 + (this.waveParams.enemyBountyCoefficient * this.waveParams.currentWave),
+                            hp: 50 + (this.waveParams.hpCoefficient * this.waveParams.currentWave),
+                        }
+                    )
+                )
+            } else {
+                // regular enemy
+                enemiesArray.push(
+                    new Enemy(
+                        this.engine,
+                        this.engine.enemySprites.levelOne,
+                        {
+                            width: 20,
+                            height: 20,
+                            spaceBetweenEnemies: 35,
+                            speed: 0.65 + (this.waveParams.speedCoefficient * this.waveParams.currentWave),
+                            bounty: 2 + (this.waveParams.enemyBountyCoefficient * this.waveParams.currentWave),
+                            hp: 100 + (this.waveParams.hpCoefficient * this.waveParams.currentWave),
+                        }
+                    )
+                )
+            }
         }
         return enemiesArray
     }
@@ -81,8 +149,8 @@ class WaveGenerator {
     public init() {
         if (!this.isInitialized) {
             // fill enemies array
-            const enemiesArray = this.repeatEnemy(this.waveParams.enemyCount + (this.waveParams.enemyCountCoefficient * this.waveParams.currentWave))
-            this.engine.enemies = [...enemiesArray]
+            this.engine.enemies = this.repeatEnemy(this.waveParams.enemyCount + (this.waveParams.enemyCountCoefficient * this.waveParams.currentWave))
+            // empty
 
             // draw enemies
             this.engine.enemies?.forEach((enemy, index) => {
@@ -91,10 +159,12 @@ class WaveGenerator {
                     y: 0
                 })
             })
-
             this.isInitialized = true;
             this.waveParams.currentWave = 1;
             this.waveParams.isWaveInProgress = true;
+            // wave timers
+            this.waveTimerBetweenWaves = null
+            this.waveCountdownTimer = null
         }
     }
 
@@ -109,8 +179,9 @@ class WaveGenerator {
             console.log(this.waveParams.currentWave)
             //
 
-            const enemiesArray = this.repeatEnemy(this.waveParams.enemyCount + (this.waveParams.enemyCountCoefficient * this.waveParams.currentWave))
-            this.engine.enemies = [...enemiesArray]
+            this.engine.enemies = this.repeatEnemy(this.waveParams.enemyCount + (this.waveParams.enemyCountCoefficient * this.waveParams.currentWave))
+            // wave timers
+            this.waveCountdownTimer = null
         }
 
         // draw enemies
@@ -139,12 +210,13 @@ export interface TDEngineI {
     towers?: Tower[],
     projectiles?: Projectile[],
     map?: Map,
-    animationFrameId?: number,
+    animationFrameId: number,
     requestIdleCallback: number,
     twoDCoordinates: twoDCoordinatesI,
     lives: number,
     score: number,
     money: number,
+    idleTimeout: number,
     isCanBuild: boolean,
     isGameStarted: boolean,
     isShowGrid: boolean,
@@ -171,22 +243,32 @@ export interface TDEngineI {
             projectileParams: TowerI["projectileParams"]
         },
     },
+    initialGameParams: {
+        money: number,
+        lives: number,
+        wave: number,
+        enemiesPerWave: number,
+        endWave: number,
+        hpCoefficient: number,
+        speedCoefficient: number,
+        strokeStyle: string
+    }
     waveGenerator: WaveGenerator | null,
 }
 
 class TDEngine {
     constructor(
         public context?: TDEngineI['context'],
+        public map?: TDEngineI['map'],
         public enemies: TDEngineI['enemies'] = [],
         public towers: TDEngineI['towers'] = [],
         public projectiles: TDEngineI['projectiles'] = [],
-        public map?: TDEngineI['map'],
-        public idleTimeout?: number,
+        public idleTimeout: TDEngineI["idleTimeout"] = 250,
         public animationFrameId: TDEngineI['animationFrameId'] = 0,
         public requestIdleCallback: TDEngineI['requestIdleCallback'] = 0,
-        public lives: TDEngineI["lives"] = 10,
+        public lives: TDEngineI["lives"] = 0,
         public score: TDEngineI["score"] = 0,
-        public money: TDEngineI["money"] = 200,
+        public money: TDEngineI["money"] = 0,
         public isCanBuild: TDEngineI["isCanBuild"] = false,
         public isGameStarted: TDEngineI["isGameStarted"] = false,
         public isShowGrid: TDEngineI["isShowGrid"] = false,
@@ -209,7 +291,7 @@ class TDEngine {
                     height: 30,
                     rectCenterX: 0,
                     rectCenterY: 0,
-                    strokeStyle: 'red',
+                    strokeStyle: 'green',
                     firingAngle: 0,
                     firingX: 0,
                     firingY: 0,
@@ -222,8 +304,8 @@ class TDEngine {
                     targetY: 0,
                     rectCenterX: 0,
                     rectCenterY: 0,
-                    width: 10,
-                    height: 10,
+                    width: 6,
+                    height: 6,
                     projectileHitAlive: 100,
                 }
             },
@@ -236,7 +318,7 @@ class TDEngine {
                     height: 30,
                     rectCenterX: 0,
                     rectCenterY: 0,
-                    strokeStyle: 'red',
+                    strokeStyle: 'green',
                     firingAngle: 0,
                     firingX: 0,
                     firingY: 0,
@@ -244,13 +326,13 @@ class TDEngine {
                 },
                 projectileParams: {
                     acceleration: 1.2,
-                    projectileSpeed: 0.2,
+                    projectileSpeed: 0.4,
                     targetX: 0,
                     targetY: 0,
                     rectCenterX: 0,
                     rectCenterY: 0,
-                    width: 10,
-                    height: 10,
+                    width: 6,
+                    height: 6,
                     projectileHitAlive: 70,
                 }
             },
@@ -263,7 +345,7 @@ class TDEngine {
                     height: 30,
                     rectCenterX: 0,
                     rectCenterY: 0,
-                    strokeStyle: 'red',
+                    strokeStyle: 'green',
                     firingAngle: 0,
                     firingX: 0,
                     firingY: 0,
@@ -276,32 +358,51 @@ class TDEngine {
                     targetY: 0,
                     rectCenterX: 0,
                     rectCenterY: 0,
-                    width: 10,
-                    height: 10,
+                    width: 6,
+                    height: 6,
                     projectileHitAlive: 200,
                 }
             },
         },
+        public initialGameParams: TDEngineI["initialGameParams"] = {
+            money: 100,
+            lives: 10,
+            wave: 1,
+            enemiesPerWave: 20,
+            endWave: 10,
+            hpCoefficient: 20,
+            speedCoefficient: 0.1,
+            strokeStyle: '#000000',
+        },
         public waveGenerator: TDEngineI['waveGenerator'] = null,
     ) {
         this.waveGenerator = new WaveGenerator(this)
-        this.idleTimeout = 250;
+        this.money = this.initialGameParams.money
+        this.lives = this.initialGameParams.lives
     }
 
-    public restartGame(){
+    public restartGame() {
         this.enemies = []
         this.towers = []
         this.projectiles = []
-        this.money = 200
-        this.lives = 10
+        // create mapTilesArr
+        this.map.createMapTilesArr()
+        // pop tiles which is occupied by map path
+        this.map.popMapPathTiles()
+        // game params
+        this.money = this.initialGameParams.money
+        this.lives = this.initialGameParams.lives
         this.score = 0
+        // spawner
+        this.waveGenerator.waveTimerBetweenWaves = null
+        this.waveGenerator.waveCountdown = Math.floor(this.waveGenerator.waveTimeoutBetweenWaves / 1000)
         this.waveGenerator.isInitialized = false
     }
 
-    public clearMemory(){
+    public clearMemory() {
         this.enemies = []
         this.projectiles = []
-        for (let tower of this.towers){
+        for (let tower of this.towers) {
             tower.target = null
         }
     }
@@ -331,6 +432,14 @@ class TDEngine {
             }
         }
         if (e.key === "4") {
+            // release all tower target
+            for (const tower of this.towers) {
+                tower.target = null
+            }
+        }
+        if (e.key === "5") {
+            // remove all projectiles
+            this.projectiles = []
         }
         // log mode
         if (e.key === "0") {
@@ -422,7 +531,7 @@ class TDEngine {
         }
     }
 
-    highlightTile(coords:twoDCoordinatesI){
+    highlightTile(coords: twoDCoordinatesI) {
         this.context.beginPath()
         this.context.strokeStyle = 'green'
         this.context.setLineDash([])
@@ -454,6 +563,8 @@ class TDEngine {
             } else {
                 this.draftTower.currentPosition = this.draftBuildCoordinates
             }
+
+            this.draftTower.towerParams.strokeStyle = 'green'
         }
     }
 
@@ -463,14 +574,14 @@ class TDEngine {
                 this.isNotEnoughMoney = false
 
                 let isTileFound = false
-                for(const tile of this.map.mapParams.mapTilesArr){
+                for (const tile of this.map.mapParams.mapTilesArr) {
                     if (tile.x === this.map.mapParams.closestTile.x && tile.y === this.map.mapParams.closestTile.y) {
                         isTileFound = true
                     }
 
                 }
 
-                if (isTileFound){
+                if (isTileFound) {
                     // show building grid
                     //this.isShowGrid = true
 
@@ -479,6 +590,9 @@ class TDEngine {
                     } else {
                         this.draftTower.currentPosition = this.draftBuildCoordinates
                     }
+
+                    // set strokeStyle to default
+                    this.draftTower.towerParams.strokeStyle = this.initialGameParams.strokeStyle
 
                     // add new tower
                     this.towers = [
@@ -535,15 +649,15 @@ class TDEngine {
     }
 
     public get towerOneParam() {
-        return JSON.parse(JSON.stringify(this.predefinedTowerParams.levelOne))
+        return structuredClone(this.predefinedTowerParams.levelOne)
     }
 
     public get towerTwoParam() {
-        return JSON.parse(JSON.stringify(this.predefinedTowerParams.levelTwo))
+        return structuredClone(this.predefinedTowerParams.levelTwo)
     }
 
     public get towerThreeParam() {
-        return JSON.parse(JSON.stringify(this.predefinedTowerParams.levelThree))
+        return structuredClone(this.predefinedTowerParams.levelThree)
     }
 }
 

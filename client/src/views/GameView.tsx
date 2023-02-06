@@ -10,7 +10,7 @@ const GameView = () => {
     engine.map = new Map(engine)
 
     return (
-        <Game engine={engine}/>
+        <Game engine={engine} />
     )
 }
 

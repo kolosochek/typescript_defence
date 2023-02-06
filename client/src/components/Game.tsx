@@ -21,6 +21,9 @@ const Game: React.FC<GameProps> = ({engine}) => {
     const towerThreeImage = useRef<HTMLImageElement>(null)
     // enemy sprite img
     const enemyOneImage = useRef<HTMLImageElement>(null)
+    const enemyFastImage = useRef<HTMLImageElement>(null)
+    const enemySlowImage = useRef<HTMLImageElement>(null)
+    const enemyBossImage = useRef<HTMLImageElement>(null)
     // projectile sprite img
     const projectileOneImage = useRef<HTMLImageElement>(null)
     const projectileTwoImage = useRef<HTMLImageElement>(null)
@@ -30,26 +33,24 @@ const Game: React.FC<GameProps> = ({engine}) => {
     const projectileHitTwoImage = useRef<HTMLImageElement>(null)
     const projectileHitThreeImage = useRef<HTMLImageElement>(null)
     // game status params
-    const [lives, setLives] = useState<GameProps["lives"]>(engine.lives)
+    const [lives, setLives] = useState<GameProps["lives"]>(engine.initialGameParams.lives)
     const [score, setScore] = useState<GameProps["score"]>(engine.score)
-    const [money, setMoney] = useState<GameProps["money"]>(engine.money)
+    const [money, setMoney] = useState<GameProps["money"]>(engine.initialGameParams.money)
     const [wave, setWave] = useState<GameProps["wave"]>(engine.waveGenerator.waveParams.currentWave)
+    const [countdown, setCountdown] = useState(engine.waveGenerator.waveCountdown)
     const [enemiesLeft, setEnemiesLeft] = useState<GameProps["wave"]>(engine.enemies.length)
-    const [countdownTimer, setCountdownTimer] = useState(Math.floor(engine.waveGenerator.waveTimeoutBetweenWaves / 1000))
-    const [isCountdown, setIsCountdown] = useState(false)
     const [isNotEnoughMoney, setIsNotEnoughMoney] = useState<TDEngineI["isNotEnoughMoney"]>(engine.isNotEnoughMoney)
     const [isGameOver, setIsGameOver] = useState<boolean>(false)
     const [isGameStarted, setIsGameStarted] = useState<boolean>(false)
 
 
     const gameLoop = () => {
-
         if (engine.isGameStarted) {
-            // draw level map
-            engine.map?.drawMap()
-
             if (engine.lives > 0) {
                 engine.clearCanvas()
+
+                // draw level map
+                engine.map?.drawMap()
 
                 // draw map grid
                 if (engine.isShowGrid) {
@@ -88,7 +89,6 @@ const Game: React.FC<GameProps> = ({engine}) => {
 
             } else {
                 // GAME IS OVER!
-                setIsGameOver(true)
             }
 
             // request animation frame
@@ -103,16 +103,31 @@ const Game: React.FC<GameProps> = ({engine}) => {
         if (engine.isGameStarted) {
             // update game results
             setScore(engine.score)
+            //setCountdown(engine.waveGenerator.waveCountdown)
             setLives(engine.lives)
             setMoney(engine.money)
             setWave(engine.waveGenerator.waveParams.currentWave)
             setEnemiesLeft(engine.enemies.length)
             setIsNotEnoughMoney(engine.isNotEnoughMoney)
+            if(engine.lives){
+                if (!isGameOver){
+                    setIsGameOver(false)
+                }
+            } else {
+                setIsGameOver(true)
+            }
 
 
             // enemy init || move
             if (!engine.waveGenerator.isInitialized) {
-                engine.waveGenerator.init()
+                if (!engine.waveGenerator.waveTimerBetweenWaves) {
+                    // UI countdown between waves
+                    engine.waveGenerator.countdown()
+                    setTimeout(() => {
+                        engine.waveGenerator.init()
+                    }, engine.waveGenerator.waveTimeoutBetweenWaves)
+                }
+
             }
 
             // isWaveInProgress?
@@ -120,15 +135,8 @@ const Game: React.FC<GameProps> = ({engine}) => {
                 engine.waveGenerator.waveParams.isWaveInProgress = false;
                 engine.clearMemory()
                 if (!engine.waveGenerator.waveTimerBetweenWaves) {
-                    if (!isCountdown && countdownTimer) {
-                        setIsCountdown(true)
-                        setInterval(() => {
-                            setCountdownTimer(countdownTimer-1)
-                        }, 1000)
-                    } else {
-                        setIsCountdown(false)
-                        setCountdownTimer(Math.floor(engine.waveGenerator.waveTimeoutBetweenWaves / 1000))
-                    }
+                    // UI countdown between waves
+                    engine.waveGenerator.countdown()
                     setTimeout(() => {
                         engine.waveGenerator.spawnEnemies()
                     }, engine.waveGenerator.waveTimeoutBetweenWaves)
@@ -138,8 +146,12 @@ const Game: React.FC<GameProps> = ({engine}) => {
             // search n destroy
             engine.towers?.forEach((tower => {
                 if (tower.target) {
-                    tower.findTargetVector()
-                    tower.fire()
+                    if(tower.isEnemyInRange(tower.target)){
+                        tower.findTargetVector()
+                        tower.fire()
+                    } else {
+                        tower.findTarget()
+                    }
                 } else {
                     tower.findTarget()
                 }
@@ -207,12 +219,17 @@ const Game: React.FC<GameProps> = ({engine}) => {
             // projectile hit sprites
             engine.enemySprites = {
                 levelOne: enemyOneImage.current,
+                fast: enemyFastImage.current,
+                slow: enemySlowImage.current,
+                boss: enemyBossImage.current,
             }
         }
         /* /LOAD SPRITES */
 
-        // draw level map
-        //engine.map?.drawMap()
+        if (!engine.waveGenerator.isInitialized){
+            // init level map draw
+            engine.map?.drawMap()
+        }
 
         // game start
         if (engine.isGameStarted) {
@@ -265,6 +282,24 @@ const Game: React.FC<GameProps> = ({engine}) => {
                     src="enemyOne.png"
                     ref={enemyOneImage}
                 />
+                <img
+                    id="enemyFastImage"
+                    alt="enemyFastImage sprite"
+                    src="enemyFast.png"
+                    ref={enemyFastImage}
+                />
+                <img
+                    id="enemySlowImage"
+                    alt="enemySlowImage sprite"
+                    src="enemySlow.png"
+                    ref={enemySlowImage}
+                />
+                <img
+                    id="enemyBossImage"
+                    alt="enemyBossImage sprite"
+                    src="enemyBoss.png"
+                    ref={enemyBossImage}
+                />
             </div>
             <div className="b-projectile-sprite" style={{display: 'none'}}>
                 <img
@@ -316,8 +351,8 @@ const Game: React.FC<GameProps> = ({engine}) => {
                     <span>{`Lives left: ${lives}`}</span>&nbsp;
                     <span>{`Killed enemies: ${score}`}</span>&nbsp;
                     <span style={{color: `${isNotEnoughMoney ? 'red' : ''}`}}>{`Money: $${money}`}</span>&nbsp;
-                    {isCountdown && <span style={{color: 'green'}}>{`Countdown: ${countdownTimer}`}</span>}
                 </p>
+                {/* <p>{Boolean(countdown) && <span>{`Next wave in: ${countdown} seconds`}</span>}</p> */}
             </div>
             <hr/>
             <div>

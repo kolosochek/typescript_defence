@@ -9,10 +9,11 @@ export interface EnemyI {
         spaceBetweenEnemies: number,
         speed: number,
         bounty: number,
-        rectCenterX: number,
-        rectCenterY: number,
-        strokeStyle: string,
+        rectCenterX?: number,
+        rectCenterY?: number,
+        strokeStyle?: string,
         hp: number,
+        maxHp?: number,
     }
     isHaveAttacker?: boolean
 }
@@ -31,6 +32,7 @@ class Enemy {
             rectCenterX: 0,
             rectCenterY: 0,
             hp: 100,
+            maxHp: null,
         },
         public currentPosition: twoDCoordinatesI = {
             x: 0,
@@ -38,26 +40,45 @@ class Enemy {
         },
         public randomOffset = {
             x: Math.floor(Math.random() * 10),
-            y: Math.floor(Math.random() * 10) + 1,
+            y: Math.floor(Math.random() * 15) + 1,
         },
         public isHaveAttacker: EnemyI["isHaveAttacker"] = false
     ) {
         this.enemyParams.rectCenterX = this.enemyParams.width / 2
         this.enemyParams.rectCenterY = this.enemyParams.height / 2
+        this.enemyParams.maxHp = this.enemyParams.hp
     }
 
     public draw() {
         // hp bar
+        const hpLeft = this.enemyParams.hp / this.enemyParams.maxHp
+        this.engine.context.beginPath()
+        if (hpLeft > 0.65) {
+            this.engine.context.fillStyle = 'green'
+        } else if (hpLeft > 0.35) {
+            this.engine.context.fillStyle = 'orange'
+        } else {
+            this.engine.context.fillStyle = 'red'
+        }
+        this.engine.context.fillRect(
+            this.currentPosition.x,
+            this.currentPosition.y - 10,
+            this.enemyParams.width * (this.enemyParams.hp / this.enemyParams.maxHp),
+            4
+        )
+        this.engine.context.closePath()
+        /*
         this.engine.context.setLineDash([])
         this.engine.context.font = ''
+        this.engine.context.strokeStyle = 'red'
         this.engine.context.strokeText(`${this.enemyParams.hp}`, this.currentPosition.x, this.currentPosition.y - 5);
-
+         */
+        // enemy 2d representation
         if (this.image) {
             this.engine.context!.beginPath()
             this.engine.context?.drawImage(this.image, this.currentPosition.x, this.currentPosition.y, this.enemyParams.width, this.enemyParams.height)
             this.engine.context!.closePath()
         } else {
-            // and place a new figure on canvas
             this.engine.context!.beginPath()
             this.engine.context!.strokeStyle = this.enemyParams.strokeStyle
             this.engine.context!.rect(this.currentPosition.x, this.currentPosition.y, this.enemyParams.width, this.enemyParams.height)
@@ -112,7 +133,16 @@ class Enemy {
     }
 
     public destroy() {
+        // pop en enemy
         this.engine.enemies = this.engine.enemies.filter((enemy) => this !== enemy)
+
+        // release tower target
+        for (const tower of this.engine.towers) {
+            if (tower.target === this) {
+                tower.target = null
+            }
+        }
+
         this.engine.score += 1
         this.engine.money += this.enemyParams.bounty
     }

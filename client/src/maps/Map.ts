@@ -39,14 +39,14 @@ class Map {
         this.mapParams.tileCenter = this.mapParams.gridStep / 2
         this.mapParams.rightBorder = this.mapParams.width / 2
 
-        // fill mapTilesArr
-        for (let x = 0; x <= this.mapParams.width; x += this.mapParams.gridStep) {
-            for (let y = 0; y <= this.mapParams.height; y += this.mapParams.gridStep) {
-                this.mapParams.mapTilesArr.push({x: x, y: y})
-            }
-        }
+        // create mapTilesArr
+        this.createMapTilesArr()
 
         // pop tiles which is occupied by map path
+        this.popMapPathTiles()
+    }
+
+    public popMapPathTiles(){
         // first stage
         for (let x = 0; x <= this.mapParams.rightBorder; x += this.mapParams.gridStep){
             this.mapParams.mapTilesArr = this.mapParams.mapTilesArr.filter(tile => tile.x !== x || tile.y !== this.mapParams.startY)
@@ -61,6 +61,13 @@ class Map {
         }
     }
 
+    public createMapTilesArr(){
+        for (let x = 0; x <= this.mapParams.width; x += this.mapParams.gridStep) {
+            for (let y = 0; y <= this.mapParams.height; y += this.mapParams.gridStep) {
+                this.mapParams.mapTilesArr.push({x: x, y: y})
+            }
+        }
+    }
 
     public drawMap = () => {
         this.engine.context.beginPath()
