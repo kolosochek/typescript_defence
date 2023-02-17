@@ -2,7 +2,6 @@ import { FC, PropsWithChildren, useEffect, useRef, useState } from "react";
 import TDEngine, {
     ITDEngine,
     IWaveGenerator,
-    TEnemyName,
 } from "../engine/TDEngine";
 import Tower from "../towers/Tower";
 import Enemy from "../enemies/Enemy";
