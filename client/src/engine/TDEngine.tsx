@@ -1356,6 +1356,7 @@ class TDEngine {
             this.map?.mapParams?.tileCenter!) +
         (tile.y -
           coordinates.y! +
+          this.map?.mapParams.gridStep! +
           this.map?.mapParams?.tileCenter!) *
           (tile.y -
             coordinates.y! +
@@ -1392,7 +1393,7 @@ class TDEngine {
   }
 
   public canvasMouseMoveCallback = (e: MouseEvent) => {
-    this.cursorPosition = { x: e.pageX, y: e.pageY };
+    this.cursorPosition = { x: e.offsetX, y: e.offsetY };
     this.findClosestTile(this.cursorPosition);
     if (this.isCanBuild) {
       this.draftShowTower();
