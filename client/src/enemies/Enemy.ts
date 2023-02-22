@@ -31,8 +31,8 @@ class Enemy {
     public engine: IEnemy["engine"],
     public enemyParams: IEnemy["enemyParams"] = {
       type: "firebug",
-      width: 20,
-      height: 20,
+      width: 64,
+      height: 64,
       spaceBetweenEnemies: 35,
       speed: 0.65,
       bounty: 5,
@@ -63,23 +63,25 @@ class Enemy {
     this.renderParams.currentFrame = 0;
   }
 
-  public drawHpBar() {
+  public drawHpBar(
+    context: CanvasRenderingContext2D = this.engine.enemyContext!,
+  ) {
     const hpLeft = this.enemyParams.hp / this.enemyParams.maxHp!;
-    this.engine.enemyContext?.beginPath();
+    context.beginPath();
     if (hpLeft > 0.65) {
-      this.engine.enemyContext!.fillStyle = "green";
+      context.fillStyle = "green";
     } else if (hpLeft > 0.35) {
-      this.engine.enemyContext!.fillStyle = "orange";
+      context.fillStyle = "orange";
     } else {
-      this.engine.enemyContext!.fillStyle = "red";
+      context.fillStyle = "red";
     }
-    this.engine.enemyContext?.fillRect(
+    context.fillRect(
       this.currentPosition.x,
       this.currentPosition.y - 5,
       this.enemyParams.width! * (this.enemyParams.hp / this.enemyParams.maxHp!),
       4,
     );
-    this.engine.enemyContext?.closePath();
+    context.closePath();
   }
 
   public drawEnemyWithSprite(
@@ -119,7 +121,11 @@ class Enemy {
     if (!this.renderParams.isAnimateDeath) {
       this.drawEnemyWithSprite(
         this.engine.enemySprites[this.enemyParams.type!]!.canvasArr![
-          this.engine.map?.stageArr.at(this.currentStage)!.direction!
+          this.engine.map?.stageArr.at(
+            this.currentStage !== this.engine.map?.stageArr?.length - 1
+              ? this.currentStage
+              : this.currentStage - 1,
+          )!.direction!
         ]![this.getNextFrameIndex()],
         context,
       );
@@ -171,12 +177,13 @@ class Enemy {
     this.currentPosition.y -= this.enemyParams.speed!;
   }
 
+  public getStage = (stageIndex = this.currentStage) => {
+    return this.engine.map?.stageArr.at(stageIndex);
+  };
+
   // enemy movement logic
   public move() {
-    const getStage = () => {
-      return this.engine.map?.stageArr.at(this.currentStage);
-    };
-    const currentStage = getStage();
+    const currentStage = this.getStage();
     if (!currentStage) return;
     switch (currentStage.direction) {
       case "start": {
@@ -235,7 +242,7 @@ class Enemy {
         break;
       }
       case "end": {
-        const prevStage = this.engine.map?.stageArr[this.currentStage - 1]!;
+        const prevStage = this.getStage(this.currentStage - 1)!;
         switch (prevStage.direction) {
           case "left": {
             if (
@@ -251,12 +258,40 @@ class Enemy {
             }
             break;
           }
-          case "down": {
+          case "right": {
             if (
-              this.currentPosition.x + this.enemyParams.width! <=
+              this.currentPosition.x - this.enemyParams.width! * 2 >=
               currentStage.limit.x // + this.randomOffset.x
             ) {
+              this.moveRight();
+            } else {
+              // end of map
+              this.destroy(false);
+              // decrement life quantity
+              this.engine.lives -= 1;
+            }
+            break;
+          }
+          case "down": {
+            if (
+              this.currentPosition.y + this.enemyParams.height! <=
+              currentStage.limit.y // + this.randomOffset.y
+            ) {
               this.moveDown();
+            } else {
+              // end of map
+              this.destroy();
+              // decrement life quantity
+              this.engine.lives -= 1;
+            }
+            break;
+          }
+          case "up": {
+            if (
+              this.currentPosition.y - this.enemyParams.height! <=
+              currentStage.limit.y // + this.randomOffset.y
+            ) {
+              this.moveUp();
             } else {
               // end of map
               this.destroy();
@@ -270,14 +305,16 @@ class Enemy {
     }
   }
 
-  public destroy() {
+  public destroy(isPushDeadEnemy = true) {
     // pop en enemy
     this.engine.enemies = this.engine.enemies?.filter(
       (enemy: Enemy) => this !== enemy,
     );
 
     // push enemy to dead enemies
-    this.engine.deadEnemies!.push(this);
+    if (isPushDeadEnemy) {
+      this.engine.deadEnemies!.push(this);
+    }
 
     // release tower target
     for (const tower of this.engine.towers!) {

@@ -27,9 +27,11 @@ class Projectile {
     },
   ) {
     this.tower.projectileParams.rectCenterX =
-      this.tower.projectileParams.width / 2;
+      this.tower.projectileParams?.dimensions[this.tower.upgradeLevel]
+        .projectileWidth / 2;
     this.tower.projectileParams.rectCenterY =
-      this.tower.projectileParams.height / 2;
+      this.tower.projectileParams?.dimensions[this.tower.upgradeLevel]
+        .projectileHeight / 2;
     this.currentPosition = {
       x: Math.floor(this.tower.towerParams.fireFromCoords.x),
       y: Math.floor(this.tower.towerParams.fireFromCoords.y),
@@ -37,7 +39,7 @@ class Projectile {
   }
 
   public getNextFrameIndex(
-    limit: number = this.tower.projectileParams.frameLimit,
+    limit: number = this.tower.projectileParams.projectileFrameLimit,
   ) {
     if (this.renderParams.currentFrame < limit - 1) {
       this.renderParams.currentFrame += 1;
@@ -50,22 +52,25 @@ class Projectile {
   public draw() {
     this.tower.engine.projectileContext?.beginPath();
     if (!this.renderParams.isAnimateImpact) {
-      const canvas =
-        this.tower.engine.towerSprites[this.tower.type]!.canvasArr?.[
-          this.tower.renderParams.cannonProjectileArr as TTowerSpriteElements
-        ]![this.getNextFrameIndex()]!;
+      const canvas = (
+        this.tower.engine.towerSprites[this.tower.type]!.canvasArr?.projectile![
+          this.tower.upgradeLevel
+        ] as HTMLCanvasElement[]
+      )[this.getNextFrameIndex()]!;
       // get current frame to rotate projectile image and draw it in main projectile context
-      const context =
-        this.tower.engine.towerSprites[this.tower.type]!.canvasContextArr?.[
-          this.tower.renderParams.cannonProjectileArr as TTowerSpriteElements
-        ]![3]!;
+      const context = (
+        this.tower.engine.towerSprites[this.tower.type]!.canvasContextArr
+          ?.projectile[this.tower.upgradeLevel]! as CanvasRenderingContext2D[]
+      )[this.tower.projectileParams.projectileFrameLimit]!;
       // find rectangle diagonal
       const canvasHypot = Math.ceil(
         Math.hypot(
           this.tower.engine.predefinedTowerParams[this.tower.type]
-            ?.projectileParams?.width!,
+            ?.projectileParams?.dimensions[this.tower.upgradeLevel]
+            .projectileWidth!,
           this.tower.engine.predefinedTowerParams[this.tower.type]
-            ?.projectileParams?.height!,
+            ?.projectileParams?.dimensions[this.tower.upgradeLevel]
+            .projectileHeight!,
         ),
       );
       // rotate frame
@@ -79,9 +84,10 @@ class Projectile {
       context.restore();
       // and draw it
       this.tower.engine.projectileContext?.drawImage(
-        this.tower.engine.towerSprites[this.tower.type]!.canvasArr?.[
-          this.tower.renderParams.cannonProjectileArr as TTowerSpriteElements
-        ]![3]!,
+        (
+          this.tower.engine.towerSprites[this.tower.type]!.canvasArr
+            ?.projectile![this.tower.upgradeLevel] as HTMLCanvasElement[]
+        )[3]!,
         // this.tower.towerParams.fireFromCoords.x,
         // this.tower.towerParams.fireFromCoords.y,
         Math.floor(this.currentPosition.x),
@@ -89,9 +95,13 @@ class Projectile {
       );
     } else {
       this.tower.engine.projectileContext?.drawImage(
-        this.tower.engine.towerSprites[this.tower.type]!.canvasArr?.impact![
-          this.getNextFrameIndex(5)
-        ]!,
+        (
+          this.tower.engine.towerSprites[this.tower.type]!.canvasArr?.impact![
+            this.tower.upgradeLevel
+          ] as HTMLCanvasElement[]
+        )[
+          this.getNextFrameIndex(this.tower.projectileParams.impactFrameLimit)
+        ]! as HTMLCanvasElement,
         // this.tower.towerParams.fireFromCoords.x,
         // this.tower.towerParams.fireFromCoords.y,
         Math.floor(this.currentPosition.x),
@@ -120,12 +130,14 @@ class Projectile {
       this.target.currentPosition.x +
       this.target.enemyParams.rectCenterX! -
       this.currentPosition.x -
-      this.tower.projectileParams.width;
+      this.tower.projectileParams.dimensions[this.tower.upgradeLevel]
+        .projectileWidth;
     const yDistance =
       this.target.currentPosition.y +
       this.target.enemyParams.rectCenterY! -
       this.currentPosition.y -
-      this.tower.projectileParams.height;
+      this.tower.projectileParams.dimensions[this.tower.upgradeLevel]
+        .projectileHeight;
     const distanceToTarget = Math.hypot(xDistance, yDistance);
 
     if (distanceToTarget < this.distanceMoved) {
@@ -169,9 +181,7 @@ class Projectile {
       this.target!.renderParams!.currentFrame = 0;
       this.target!.renderParams!.isAnimateDeath = true;
       // destroy projectile
-      this.tower.engine.projectiles!.filter(
-        (projectile) => this.target === projectile.target,
-      );
+      this.destroy();
       // release tower target
       this.tower.target = null;
       // destroy projectile target

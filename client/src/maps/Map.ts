@@ -13,8 +13,13 @@ export interface IMap {
     backgroundColor: string;
     gridColor: string;
     mapTilesArr: ITwoDCoordinates[];
+    towerTilesArr: ITwoDCoordinates[];
     tileCenter: number;
     closestTile: ITwoDCoordinates;
+  };
+  renderParams: {
+    mapRoadSpriteSource: HTMLImageElement | null;
+    isMapSpritesLoaded: boolean;
   };
   stageArr: IStage[];
 }
@@ -26,11 +31,16 @@ class Map {
       width: 960,
       height: 960,
       gridStep: 64,
-      backgroundColor: "#bdbdbd",
+      backgroundColor: "#ffae70",
       gridColor: "#000000",
       mapTilesArr: [{ x: 0, y: 0 }],
+      towerTilesArr: [],
       tileCenter: 0,
       closestTile: { x: 0, y: 0 },
+    },
+    public renderParams: IMap["renderParams"] = {
+      mapRoadSpriteSource: null,
+      isMapSpritesLoaded: false,
     },
     public stageArr: IMap["stageArr"] = [],
   ) {
@@ -119,7 +129,7 @@ class Map {
       },
       {
         direction: "end",
-        limit: { x: this.tileToNumber(15), y: this.tileToNumber(12) },
+        limit: { x: this.tileToNumber(16), y: this.tileToNumber(12) },
       },
     ];
 
@@ -128,6 +138,12 @@ class Map {
 
     // pop tiles which is occupied by map path
     this.popMapPathTiles();
+
+    this.renderParams.mapRoadSpriteSource = new Image(256, 448);
+    this.renderParams.mapRoadSpriteSource.src =
+      "/sprites/map/mapRoadSprite.png";
+    this.renderParams.mapRoadSpriteSource.onload = () =>
+      (this.renderParams.isMapSpritesLoaded = true);
   }
 
   public tileToNumber(tilesCount: number) {

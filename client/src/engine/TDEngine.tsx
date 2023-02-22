@@ -1,7 +1,8 @@
-import Enemy, { IEnemy } from "../enemies/Enemy";
+import Enemy from "../enemies/Enemy";
 import Tower from "../towers/Tower";
 import Map from "../maps/Map";
 import Projectile from "../projectiles/Projectile";
+import Sound from "../sound/Sound";
 
 // utilities declaration
 export type TPartialRecord<K extends keyof any, T> = {
@@ -23,24 +24,8 @@ export type TEnemyName =
   | "firewasp"
   | "clampbeetle"
   | "firelocust";
-type TProjectileName =
-  | "one"
-  | "levelTwo"
-  | "levelThree"
-  | "fast"
-  | "slow"
-  | "boss";
-type TProjectileSprite = TPartialRecord<TProjectileName, TImageSprite | null>;
 type TTowerSprite = TPartialRecord<TTowerSpriteTypes, ITowerSprite | null>;
-export type TTowerSpriteElements =
-  | "base"
-  | "impact"
-  | "levelOneWeapon"
-  | "levelOneProjectile"
-  | "levelTwoWeapon"
-  | "levelTwoProjectile"
-  | "levelThreeWeapon"
-  | "levelThreeProjectile";
+export type TTowerSpriteElements = "base" | "impact" | "weapon" | "projectile";
 type TEnemySprite = TPartialRecord<TEnemyName, IEnemySprite | null>;
 export type TEnemySpriteDirection =
   | "left"
@@ -58,17 +43,20 @@ export type TEnemySpriteDirection =
 type TImageSprite = CanvasImageSource;
 
 interface ITowerSprite {
-  spriteSource: TPartialRecord<TTowerSpriteElements, HTMLImageElement> | null;
-  canvasArr: TPartialRecord<TTowerSpriteElements, HTMLCanvasElement[]> | null;
-  canvasContextArr: TPartialRecord<
+  spriteSource: TPartialRecord<
     TTowerSpriteElements,
-    CanvasRenderingContext2D[]
+    HTMLImageElement | HTMLImageElement[]
+  > | null;
+  canvasArr: TPartialRecord<
+    TTowerSpriteElements,
+    HTMLCanvasElement[] | HTMLCanvasElement[][]
+  > | null;
+  canvasContextArr: Record<
+    TTowerSpriteElements,
+    CanvasRenderingContext2D[] | CanvasRenderingContext2D[][]
   > | null;
   spriteWidth?: number;
   spriteHeight?: number;
-  spriteEdgeOffset?: number;
-  spriteBetweenOffset?: number;
-  framesPerSprite: number;
 }
 interface IEnemySprite {
   spriteSource: HTMLImageElement | null;
@@ -90,6 +78,11 @@ interface IEnemySprite {
 /**
  * interfaces declaration
  */
+
+export interface ITwoDCoordinates {
+  x: number;
+  y: number;
+}
 export interface IWaveGenerator {
   waveParams: {
     currentWave: number;
@@ -124,7 +117,7 @@ class WaveGenerator {
       enemyCount: engine.initialGameParams.enemiesPerWave,
     },
     public waveTimerBetweenWaves: IWaveGenerator["waveTimerBetweenWaves"] = null,
-    public waveTimeoutBetweenWaves: IWaveGenerator["waveTimeoutBetweenWaves"] = 500, // 5000
+    public waveTimeoutBetweenWaves: IWaveGenerator["waveTimeoutBetweenWaves"] = 5000, // 5000
     public waveCountdownTimer: IWaveGenerator["waveCountdownTimer"] = null,
     public waveCountdown: IWaveGenerator["waveCountdown"] = 0,
     public isUICountdown = false,
@@ -136,7 +129,7 @@ class WaveGenerator {
     let enemiesArray = [];
     for (let iteration = 0; iteration < times; iteration++) {
       // boss enemy
-      if (iteration === 10) {
+      if (iteration % 5) {
         enemiesArray.push(
           new Enemy(this.engine, {
             type: "firebug",
@@ -154,11 +147,11 @@ class WaveGenerator {
               100 + this.waveParams.hpCoefficient * this.waveParams.currentWave,
           }),
         );
-      } else if (iteration % 10 === 0) {
+      } else if (iteration % 3 === 0) {
         // slow enemy
         enemiesArray.push(
           new Enemy(this.engine, {
-            type: "firebug",
+            type: "leafbug",
             width: this.engine.map?.mapParams?.gridStep!,
             height: this.engine.map?.mapParams?.gridStep!,
             spaceBetweenEnemies: this.engine.map?.mapParams?.gridStep! * 1.5,
@@ -177,7 +170,7 @@ class WaveGenerator {
         // fast enemy
         enemiesArray.push(
           new Enemy(this.engine, {
-            type: "firebug",
+            type: "firelocust",
             width: this.engine.map?.mapParams?.gridStep!,
             height: this.engine.map?.mapParams?.gridStep!,
             spaceBetweenEnemies: this.engine.map?.mapParams?.gridStep! * 1.5,
@@ -220,92 +213,7 @@ class WaveGenerator {
     if (!this.isInitialized) {
       this.waveParams.currentWave = 1;
       // fill enemies array
-      this.engine.enemies = [
-        new Enemy(this.engine, {
-          type: "firebug",
-          width: this.engine.map?.mapParams?.gridStep!,
-          height: this.engine.map?.mapParams?.gridStep!,
-          spaceBetweenEnemies: this.engine.map?.mapParams?.gridStep! * 1.5,
-          speed:
-            0.65 +
-            this.waveParams.speedCoefficient * this.waveParams.currentWave,
-          bounty:
-            1 +
-            this.waveParams.enemyBountyCoefficient *
-              this.waveParams.currentWave,
-          hp: 100 + this.waveParams.hpCoefficient * this.waveParams.currentWave,
-        }),
-        new Enemy(this.engine, {
-          type: "leafbug",
-          width: this.engine.map?.mapParams?.gridStep!,
-          height: this.engine.map?.mapParams?.gridStep!,
-          spaceBetweenEnemies: this.engine.map?.mapParams?.gridStep! * 1.5,
-          speed:
-            0.65 +
-            this.waveParams.speedCoefficient * this.waveParams.currentWave,
-          bounty:
-            1 +
-            this.waveParams.enemyBountyCoefficient *
-              this.waveParams.currentWave,
-          hp: 100 + this.waveParams.hpCoefficient * this.waveParams.currentWave,
-        }),
-        new Enemy(this.engine, {
-          type: "firebug",
-          width: this.engine.map?.mapParams?.gridStep!,
-          height: this.engine.map?.mapParams?.gridStep!,
-          spaceBetweenEnemies: this.engine.map?.mapParams?.gridStep! * 1.5,
-          speed:
-            0.65 +
-            this.waveParams.speedCoefficient * this.waveParams.currentWave,
-          bounty:
-            1 +
-            this.waveParams.enemyBountyCoefficient *
-              this.waveParams.currentWave,
-          hp: 100 + this.waveParams.hpCoefficient * this.waveParams.currentWave,
-        }),
-        new Enemy(this.engine, {
-          type: "leafbug",
-          width: this.engine.map?.mapParams?.gridStep!,
-          height: this.engine.map?.mapParams?.gridStep!,
-          spaceBetweenEnemies: this.engine.map?.mapParams?.gridStep! * 1.5,
-          speed:
-            0.65 +
-            this.waveParams.speedCoefficient * this.waveParams.currentWave,
-          bounty:
-            1 +
-            this.waveParams.enemyBountyCoefficient *
-              this.waveParams.currentWave,
-          hp: 100 + this.waveParams.hpCoefficient * this.waveParams.currentWave,
-        }),
-        new Enemy(this.engine, {
-          type: "firebug",
-          width: this.engine.map?.mapParams?.gridStep!,
-          height: this.engine.map?.mapParams?.gridStep!,
-          spaceBetweenEnemies: this.engine.map?.mapParams?.gridStep! * 1.5,
-          speed:
-            0.65 +
-            this.waveParams.speedCoefficient * this.waveParams.currentWave,
-          bounty:
-            1 +
-            this.waveParams.enemyBountyCoefficient *
-              this.waveParams.currentWave,
-          hp: 100 + this.waveParams.hpCoefficient * this.waveParams.currentWave,
-        }),
-        new Enemy(this.engine, {
-          type: "leafbug",
-          width: this.engine.map?.mapParams?.gridStep!,
-          height: this.engine.map?.mapParams?.gridStep!,
-          spaceBetweenEnemies: this.engine.map?.mapParams?.gridStep! * 1.5,
-          speed:
-            0.65 +
-            this.waveParams.speedCoefficient * this.waveParams.currentWave,
-          bounty:
-            1 +
-            this.waveParams.enemyBountyCoefficient *
-              this.waveParams.currentWave,
-          hp: 100 + this.waveParams.hpCoefficient * this.waveParams.currentWave,
-        }),
-      ];
+      this.engine.enemies = this.repeatEnemy(this.waveParams.enemyCount);
 
       // set enemies position
       this.engine.enemies?.forEach((enemy: Enemy, index: number) => {
@@ -377,35 +285,6 @@ class WaveGenerator {
     }
   }
 
-  public spawnEnemiesCopy() {
-    // fill enemies array
-    if (
-      this.waveParams.currentWave < this.waveParams.endWave &&
-      !this.waveParams.isWaveInProgress
-    ) {
-      // increment wave
-      this.waveParams.currentWave += 1;
-
-      this.engine.enemies = this.repeatEnemy(
-        this.waveParams.enemyCount +
-          this.waveParams.enemyCountCoefficient * this.waveParams.currentWave,
-      );
-    }
-
-    // draw enemies
-    this.engine.enemies?.forEach((enemy: Enemy, index: number) => {
-      enemy.initialSetEnemy({
-        x:
-          -enemy.enemyParams.spaceBetweenEnemies! *
-            this.engine.enemies?.length! +
-          index * enemy.enemyParams.spaceBetweenEnemies!,
-        y: 0,
-      });
-    });
-    clearTimeout(this.waveTimerBetweenWaves!);
-    this.waveParams.isWaveInProgress = true;
-  }
-
   public countdown() {
     if (!this.waveCountdownTimer) {
       this.waveCountdownTimer = setInterval(() => {
@@ -420,19 +299,11 @@ class WaveGenerator {
   }
 }
 
-export interface ITwoDCoordinates {
-  x: number;
-  y: number;
-}
-
 export interface ITDEngine {
   context?: CanvasRenderingContext2D;
   mapContext?: CanvasRenderingContext2D;
   enemyContext?: CanvasRenderingContext2D;
   deadEnemyContext?: CanvasRenderingContext2D;
-  offscreen: OffscreenCanvas | null;
-  offscreenContext: OffscreenRenderingContext | null;
-  offscreenWorker: Worker | null;
   enemies?: Enemy[];
   towers?: Tower[];
   projectiles?: Projectile[];
@@ -451,8 +322,6 @@ export interface ITDEngine {
   canvasMouseMoveEvent: EventListener | null;
   draftTower: Tower | null;
   cursorPosition: ITwoDCoordinates;
-  projectileSprites: TProjectileSprite;
-  projectileHitSprites: TProjectileSprite;
   towerSprites: TTowerSprite;
   enemySprites: TEnemySprite;
   mapSprites: TImageSprite[];
@@ -476,6 +345,7 @@ export interface ITDEngine {
     fps: number;
   };
   waveGenerator: WaveGenerator | null;
+  sound: Sound | null;
 }
 
 class TDEngine {
@@ -509,8 +379,6 @@ class TDEngine {
     public draftBuildCoordinates: ITwoDCoordinates = { x: 0, y: 0 },
     public towerSprites: ITDEngine["towerSprites"] = {},
     public enemySprites: ITDEngine["enemySprites"] = {},
-    public projectileSprites: ITDEngine["projectileSprites"] = {},
-    public projectileHitSprites: ITDEngine["projectileHitSprites"] = {},
     public mapSprites: ITDEngine["mapSprites"] = [],
     public predefinedTowerParams: ITDEngine["predefinedTowerParams"] = {
       one: {
@@ -518,11 +386,33 @@ class TDEngine {
           attackRate: 2000,
           attackDamage: 30,
           attackRange: 300,
-          width: 64,
-          height: 128,
+          baseWidth: 64,
+          baseHeight: 128,
+          dimensions: [
+            {
+              cannonWidth: 96,
+              cannonHeight: 96,
+              cannonOffsetX: 0,
+              cannonOffsetY: 20,
+            },
+            {
+              cannonWidth: 96,
+              cannonHeight: 96,
+              cannonOffsetX: 0,
+              cannonOffsetY: 12,
+            },
+            {
+              cannonWidth: 96,
+              cannonHeight: 96,
+              cannonOffsetX: 0,
+              cannonOffsetY: 4,
+            },
+          ],
+          cannonFrameLimit: 6,
+          isSelected: false,
           rectCenterX: 0,
           rectCenterY: 0,
-          strokeStyle: "green",
+          strokeStyle: "rgba(0, 255, 0, 0.2)",
           firingAngle: 0,
           fireFromCoords: { x: 0, y: 0 },
           price: 25,
@@ -534,10 +424,23 @@ class TDEngine {
           targetY: 0,
           rectCenterX: 0,
           rectCenterY: 0,
-          width: 22,
-          height: 40,
+          dimensions: [
+            {
+              projectileWidth: 22,
+              projectileHeight: 40,
+            },
+            {
+              projectileWidth: 22,
+              projectileHeight: 40,
+            },
+            {
+              projectileWidth: 22,
+              projectileHeight: 40,
+            },
+          ],
           projectileHitAlive: 120,
-          frameLimit: 3,
+          projectileFrameLimit: 3,
+          impactFrameLimit: 6,
         },
       },
       two: {
@@ -545,8 +448,154 @@ class TDEngine {
           attackRate: 3000,
           attackDamage: 20,
           attackRange: 300,
-          width: 64,
-          height: 128,
+          baseWidth: 64,
+          baseHeight: 128,
+          dimensions: [
+            {
+              cannonWidth: 48,
+              cannonHeight: 48,
+              cannonOffsetX: 0,
+              cannonOffsetY: 22,
+            },
+            {
+              cannonWidth: 64,
+              cannonHeight: 64,
+              cannonOffsetX: 0,
+              cannonOffsetY: 12,
+            },
+            {
+              cannonWidth: 64,
+              cannonHeight: 64,
+              cannonOffsetX: 0,
+              cannonOffsetY: 4,
+            },
+          ],
+          cannonFrameLimit: 16,
+          isSelected: false,
+          rectCenterX: 0,
+          rectCenterY: 0,
+          strokeStyle: "rgba(0, 255, 0, 0.2)",
+          firingAngle: 0,
+          fireFromCoords: { x: 0, y: 0 },
+          price: 45,
+        },
+        projectileParams: {
+          acceleration: 1.2,
+          projectileSpeed: 0.4,
+          targetX: 0,
+          targetY: 0,
+          rectCenterX: 0,
+          rectCenterY: 0,
+          dimensions: [
+            {
+              projectileWidth: 32,
+              projectileHeight: 32,
+            },
+            {
+              projectileWidth: 32,
+              projectileHeight: 32,
+            },
+            {
+              projectileWidth: 32,
+              projectileHeight: 32,
+            },
+          ],
+          projectileHitAlive: 120,
+          projectileFrameLimit: 5,
+          impactFrameLimit: 5,
+        },
+      },
+      three: {
+        towerParams: {
+          attackRate: 3000,
+          attackDamage: 20,
+          attackRange: 300,
+          baseWidth: 64,
+          baseHeight: 128,
+          dimensions: [
+            {
+              cannonWidth: 96,
+              cannonHeight: 96,
+              cannonOffsetX: 0,
+              cannonOffsetY: 22,
+            },
+            {
+              cannonWidth: 96,
+              cannonHeight: 96,
+              cannonOffsetX: 0,
+              cannonOffsetY: 12,
+            },
+            {
+              cannonWidth: 96,
+              cannonHeight: 96,
+              cannonOffsetX: 0,
+              cannonOffsetY: 4,
+            },
+          ],
+          cannonFrameLimit: 8,
+          isSelected: false,
+          rectCenterX: 0,
+          rectCenterY: 0,
+          strokeStyle: "rgba(0, 255, 0, 0.2)",
+          firingAngle: 0,
+          fireFromCoords: { x: 0, y: 0 },
+          price: 45,
+        },
+        projectileParams: {
+          acceleration: 1.2,
+          projectileSpeed: 0.4,
+          targetX: 0,
+          targetY: 0,
+          rectCenterX: 0,
+          rectCenterY: 0,
+          dimensions: [
+            {
+              projectileWidth: 10,
+              projectileHeight: 10,
+            },
+            {
+              projectileWidth: 10,
+              projectileHeight: 10,
+            },
+            {
+              projectileWidth: 10,
+              projectileHeight: 10,
+            },
+          ],
+          projectileHitAlive: 120,
+          projectileFrameLimit: 6,
+          impactFrameLimit: 5,
+        },
+      },
+      four: {
+        towerParams: {
+          attackRate: 3000,
+          attackDamage: 20,
+          attackRange: 300,
+          baseWidth: 64,
+          baseHeight: 128,
+          dimensions: [
+            {
+              cannonWidth: 128,
+              cannonHeight: 128,
+              cannonOffsetX: 0,
+              cannonOffsetY: 22,
+            },
+            {
+              cannonWidth: 128,
+              cannonHeight: 128,
+              cannonOffsetX: 0,
+              cannonOffsetY: 12,
+            },
+            {
+              cannonWidth: 128,
+              cannonHeight: 128,
+              cannonOffsetX: 0,
+              cannonOffsetY: 4,
+            },
+          ],
+          cannonFrameLimit: 16,
+          isSelected: false,
           rectCenterX: 0,
           rectCenterY: 0,
           strokeStyle: "green",
@@ -561,37 +610,23 @@ class TDEngine {
           targetY: 0,
           rectCenterX: 0,
           rectCenterY: 0,
-          width: 22,
-          height: 40,
+          dimensions: [
+            {
+              projectileWidth: 8,
+              projectileHeight: 8,
+            },
+            {
+              projectileWidth: 8,
+              projectileHeight: 8,
+            },
+            {
+              projectileWidth: 8,
+              projectileHeight: 8,
+            },
+          ],
           projectileHitAlive: 120,
-          frameLimit: 3,
-        },
-      },
-      three: {
-        towerParams: {
-          attackRate: 4000,
-          attackDamage: 100,
-          attackRange: 300,
-          width: 64,
-          height: 128,
-          rectCenterX: 0,
-          rectCenterY: 0,
-          strokeStyle: "green",
-          firingAngle: 0,
-          fireFromCoords: { x: 0, y: 0 },
-          price: 65,
-        },
-        projectileParams: {
-          acceleration: 1.2,
-          projectileSpeed: 0.25,
-          targetX: 0,
-          targetY: 0,
-          rectCenterX: 0,
-          rectCenterY: 0,
-          width: 22,
-          height: 40,
-          projectileHitAlive: 120,
-          frameLimit: 3,
+          projectileFrameLimit: 6,
+          impactFrameLimit: 8,
         },
       },
     },
@@ -602,12 +637,13 @@ class TDEngine {
       enemiesPerWave: 20,
       endWave: 10,
       hpCoefficient: 20,
-      speedCoefficient: 0.3,
+      speedCoefficient: 0.3, // 0.3,
       strokeStyle: "#000000",
       framesPerSprite: 8,
       fps: 24,
     },
     public waveGenerator: ITDEngine["waveGenerator"] = null,
+    public sound: ITDEngine["sound"] = new Sound(),
   ) {
     // set map
     this.setMap(new Map(this));
@@ -617,12 +653,16 @@ class TDEngine {
     this.lives = this.initialGameParams.lives;
   }
 
-  public restartGame() {
+  public gameRestart() {
     // clear memory
     this.enemies = [];
     this.deadEnemies = [];
     this.towers = [];
     this.projectiles = [];
+    // reset sound
+    // game start sound
+    this.sound?.soundArr?.gameStart?.pause();
+    this.sound!.soundArr!.gameStart!.currentTime = 0;
     // clear canvas
     this.clearTowerCanvas();
     // wave generator
@@ -652,6 +692,14 @@ class TDEngine {
     }, this.waveGenerator!.waveTimeoutBetweenWaves);
   }
 
+  public gamePause() {
+    this.isGameStarted = false;
+  }
+
+  public gameStart() {
+    this.isGameStarted = true;
+  }
+
   public clearMemory() {
     this.enemies = [];
     this.deadEnemies = [];
@@ -665,9 +713,8 @@ class TDEngine {
     // split sprites into proper frames
     // and draw proper frames in each canvas
     // split png sprite to separate canvases,
-    this.towerSprites[towerType]!.canvasArr = this.createTowerSpriteCanvasArr(
-      this.towerSprites[towerType]!.framesPerSprite,
-    );
+    this.towerSprites[towerType]!.canvasArr =
+      this.createTowerSpriteCanvasArr(towerType);
     // set their render context
     this.towerSprites[towerType]!.canvasContextArr =
       this.createTowerSpriteCanvasContext(
@@ -678,88 +725,34 @@ class TDEngine {
     for (const [element, source] of Object.entries(
       this.towerSprites[towerType]!.spriteSource!,
     )) {
-      source.onload = () => {
-        // and draw proper frames in each canvas
-        this.drawTowerFrameOnCanvas(
-          element as TTowerSpriteElements,
-          this.towerSprites[towerType]!.canvasContextArr![
-            element as TTowerSpriteElements
-          ]!,
-          source,
-          this.towerSprites[towerType]!.spriteEdgeOffset!,
-          this.towerSprites[towerType]!.spriteBetweenOffset!,
-          towerType,
-        );
-        // debug
-        /*
-        this.towerSprites.one?.canvasArr?.levelOneWeapon!.forEach(
-          (canvas, index) => {
-            this.towerContext?.beginPath();
-            this.towerContext?.drawImage(
-              canvas,
-              0,
-              0,
-              this.map?.mapParams?.gridStep!,
-              this.map?.mapParams?.gridStep! * 2,
-              this.map?.mapParams?.gridStep! * index,
-              128,
-              this.map?.mapParams?.gridStep!,
-              this.map?.mapParams?.gridStep! * 2,
+      if (Array.isArray(source)) {
+        source.forEach((imageSource, upgradeLevel) => {
+          imageSource.onload = () => {
+            // and draw proper frames in each canvas
+            this.drawTowerFrameOnCanvas(
+              element as TTowerSpriteElements,
+              this.towerSprites[towerType]!.canvasContextArr![
+                element as TTowerSpriteElements
+              ][upgradeLevel]! as CanvasRenderingContext2D[],
+              imageSource,
+              towerType,
+              upgradeLevel,
             );
-            this.towerContext?.closePath();
-          },
-        );
-        this.towerSprites.one?.canvasArr?.levelTwoWeapon!.forEach(
-          (canvas, index) => {
-            this.towerContext?.beginPath();
-            this.towerContext?.drawImage(
-              canvas,
-              0,
-              0,
-              this.map?.mapParams?.gridStep!,
-              this.map?.mapParams?.gridStep! * 2,
-              this.map?.mapParams?.gridStep! * index,
-              192,
-              this.map?.mapParams?.gridStep!,
-              this.map?.mapParams?.gridStep! * 2,
-            );
-            this.towerContext?.closePath();
-          },
-        );
-        this.towerSprites.one?.canvasArr?.levelThreeWeapon!.forEach(
-          (canvas, index) => {
-            this.towerContext?.beginPath();
-            this.towerContext?.drawImage(
-              canvas,
-              0,
-              0,
-              this.map?.mapParams?.gridStep!,
-              this.map?.mapParams?.gridStep! * 2,
-              this.map?.mapParams?.gridStep! * index,
-              256,
-              this.map?.mapParams?.gridStep!,
-              this.map?.mapParams?.gridStep! * 2,
-            );
-            this.towerContext?.closePath();
-          },
-        );
-        this.towerSprites.one?.canvasArr?.base!.forEach((canvas, index) => {
-          this.towerContext?.beginPath();
-          this.towerContext?.drawImage(
-            canvas,
-            0,
-            0,
-            this.map?.mapParams?.gridStep!,
-            this.map?.mapParams?.gridStep! * 2,
-            this.map?.mapParams?.gridStep! * index,
-            302,
-            this.map?.mapParams?.gridStep!,
-            this.map?.mapParams?.gridStep! * 2,
-          );
-          this.towerContext?.closePath();
+          };
         });
-         */
-      };
+      } else {
+        source.onload = () => {
+          // and draw proper frames in each canvas
+          this.drawTowerFrameOnCanvas(
+            element as TTowerSpriteElements,
+            this.towerSprites[towerType]!.canvasContextArr![
+              element as TTowerSpriteElements
+            ]! as CanvasRenderingContext2D[],
+            source,
+            towerType,
+          );
+        };
+      }
     }
   }
 
@@ -790,25 +783,6 @@ class TDEngine {
       );
 
       // debug
-      /*
-      this.enemySprites.firebug?.canvasArr?.right!.forEach(
-        (cnvs, index) => {
-          this.towerContext?.beginPath();
-          this.towerContext?.drawImage(
-            cnvs,
-            0,
-            0,
-            this.map?.mapParams?.gridStep!,
-            this.map?.mapParams?.gridStep!,
-            this.map?.mapParams?.gridStep! * index,
-            0,
-            this.map?.mapParams?.gridStep!,
-            this.map?.mapParams?.gridStep!,
-          );
-          this.towerContext?.closePath();
-        },
-      );
-       */
     };
   }
 
@@ -816,17 +790,48 @@ class TDEngine {
     return Array.from(Array(arrLength), () => document.createElement("canvas"));
   }
 
-  public createTowerSpriteCanvasArr(frames: number) {
+  public createTowerSpriteCanvasArr(towerType: TTowerSpriteTypes) {
     return {
       base: this.createCanvasArr(3),
-      // not set yet
-      impact: this.createCanvasArr(5),
-      levelOneWeapon: this.createCanvasArr(6),
-      levelOneProjectile: this.createCanvasArr(4), // 3 frames + copy for rotation canvas
-      levelTwoWeapon: this.createCanvasArr(6),
-      levelTwoProjectile: this.createCanvasArr(4), // 3 frames + copy for rotation canvas
-      levelThreeWeapon: this.createCanvasArr(6),
-      levelThreeProjectile: this.createCanvasArr(4), // 3 frames + copy for rotation canvas
+      impact: [
+        this.createCanvasArr(
+          this.predefinedTowerParams[towerType]?.projectileParams
+            ?.impactFrameLimit!,
+        )!,
+        this.createCanvasArr(
+          this.predefinedTowerParams[towerType]?.projectileParams
+            ?.impactFrameLimit!,
+        )!,
+        this.createCanvasArr(
+          this.predefinedTowerParams[towerType]?.projectileParams
+            ?.impactFrameLimit!,
+        )!,
+      ],
+      weapon: [
+        this.createCanvasArr(
+          this.predefinedTowerParams[towerType]?.towerParams?.cannonFrameLimit!,
+        )!,
+        this.createCanvasArr(
+          this.predefinedTowerParams[towerType]?.towerParams?.cannonFrameLimit!,
+        )!,
+        this.createCanvasArr(
+          this.predefinedTowerParams[towerType]?.towerParams?.cannonFrameLimit!,
+        )!,
+      ],
+      projectile: [
+        this.createCanvasArr(
+          this.predefinedTowerParams[towerType]?.projectileParams
+            ?.projectileFrameLimit! + 1,
+        )!,
+        this.createCanvasArr(
+          this.predefinedTowerParams[towerType]?.projectileParams
+            ?.projectileFrameLimit! + 1!,
+        )!,
+        this.createCanvasArr(
+          this.predefinedTowerParams[towerType]?.projectileParams
+            ?.projectileFrameLimit! + 1!,
+        )!,
+      ],
     };
   }
 
@@ -836,89 +841,81 @@ class TDEngine {
   ) {
     let contextArr: ITowerSprite["canvasContextArr"] = {
       base: [],
-      impact: [],
-      levelOneWeapon: [],
-      levelOneProjectile: [],
-      levelTwoWeapon: [],
-      levelTwoProjectile: [],
-      levelThreeWeapon: [],
-      levelThreeProjectile: [],
+      impact: [[], [], []],
+      weapon: [[], [], []],
+      projectile: [[], [], []],
     };
-    for (const [element, canvasArray] of Object.entries(canvasArr!)) {
-      for (const canvas of canvasArray!) {
-        // find the widest or longest value of projectile canvas depending on firing angle
-        const canvasHypot = Math.ceil(
-          Math.hypot(
-            this.predefinedTowerParams[towerType]!.projectileParams.width,
-            this.predefinedTowerParams[towerType]!.projectileParams?.height,
-          ),
-        );
-        //
-        switch (element as TTowerSpriteElements) {
-          case "base": {
-            canvas.width = this.map?.mapParams?.gridStep!;
-            canvas.height = this.map?.mapParams?.gridStep! * 2;
-            contextArr[element as TTowerSpriteElements]!.push(
-              canvas.getContext("2d")!,
-            );
-            break;
-          }
-          case "levelOneWeapon": {
-            canvas.width = this.map?.mapParams?.gridStep!;
-            canvas.height = this.map?.mapParams?.gridStep!;
-            contextArr[element as TTowerSpriteElements]!.push(
-              canvas.getContext("2d")!,
-            );
-            break;
-          }
-          case "levelTwoWeapon": {
-            canvas.width = this.map?.mapParams?.gridStep!;
-            canvas.height = this.map?.mapParams?.gridStep!;
-            contextArr[element as TTowerSpriteElements]!.push(
-              canvas.getContext("2d")!,
-            );
-            break;
-          }
-          case "levelThreeWeapon": {
-            canvas.width = this.map?.mapParams?.gridStep!;
-            canvas.height = this.map?.mapParams?.gridStep!;
-            contextArr[element as TTowerSpriteElements]!.push(
-              canvas.getContext("2d")!,
-            );
-            break;
-          }
-          case "levelOneProjectile": {
-            canvas.width = canvasHypot;
-            canvas.height = canvasHypot;
-            contextArr[element as TTowerSpriteElements]!.push(
-              canvas.getContext("2d")!,
-            );
-            break;
-          }
-          case "levelTwoProjectile": {
-            canvas.width = canvasHypot;
-            canvas.height = canvasHypot;
-            contextArr[element as TTowerSpriteElements]!.push(
-              canvas.getContext("2d")!,
-            );
-            break;
-          }
-          case "levelThreeProjectile": {
-            canvas.width = canvasHypot;
-            canvas.height = canvasHypot;
-            contextArr[element as TTowerSpriteElements]!.push(
-              canvas.getContext("2d")!,
-            );
-            break;
-          }
-          case "impact": {
-            canvas.width = this.map?.mapParams?.gridStep!;
-            canvas.height = this.map?.mapParams?.gridStep!;
-            contextArr[element as TTowerSpriteElements]!.push(
-              canvas.getContext("2d")!,
-            );
-            break;
-          }
+    for (const [element, upgradeArr] of Object.entries(canvasArr!)) {
+      switch (element as TTowerSpriteElements) {
+        case "base": {
+          upgradeArr.forEach((canvas, upgradeLevel) => {
+            if (!Array.isArray(canvas)) {
+              canvas.width =
+                this.predefinedTowerParams[
+                  towerType as TTowerSpriteTypes
+                ]!.towerParams.baseWidth!;
+              canvas.height =
+                this.predefinedTowerParams[
+                  towerType as TTowerSpriteTypes
+                ]!.towerParams.baseHeight!;
+              (contextArr?.base as CanvasRenderingContext2D[]).push(
+                canvas.getContext("2d")!,
+              );
+            }
+          });
+          break;
+        }
+        case "weapon": {
+          upgradeArr.forEach((upgradeLevel, level) => {
+            (upgradeLevel as HTMLCanvasElement[]).forEach((canvas) => {
+              canvas.width = this.predefinedTowerParams[towerType]!.towerParams
+                ?.dimensions[level]!.cannonWidth as number;
+              canvas.height = this.predefinedTowerParams[towerType]!.towerParams
+                ?.dimensions[level]!.cannonHeight as number;
+              (contextArr!.weapon[level]! as CanvasRenderingContext2D[]).push(
+                canvas.getContext("2d")!,
+              );
+            });
+          });
+          break;
+        }
+        case "projectile": {
+          upgradeArr.forEach((upgradeLevel, level) => {
+            (upgradeLevel as HTMLCanvasElement[]).forEach((canvas) => {
+              const canvasHypot = Math.ceil(
+                Math.hypot(
+                  this.predefinedTowerParams[towerType]!.projectileParams
+                    ?.dimensions[level]!.projectileWidth,
+                  this.predefinedTowerParams[towerType]!.projectileParams
+                    ?.dimensions[level]!.projectileHeight,
+                ),
+              );
+              canvas.width = canvasHypot;
+              canvas.height = canvasHypot;
+              (
+                contextArr!.projectile[level]! as CanvasRenderingContext2D[]
+              ).push(canvas.getContext("2d")!);
+            });
+          });
+          break;
+        }
+        case "impact": {
+          upgradeArr.forEach((upgradeLevel, level) => {
+            (upgradeLevel as HTMLCanvasElement[]).forEach((canvas) => {
+              canvas.width =
+                this.predefinedTowerParams[
+                  towerType
+                ]!.projectileParams?.dimensions[level]!.projectileWidth;
+              canvas.height =
+                this.predefinedTowerParams[
+                  towerType
+                ]!.projectileParams?.dimensions[level].projectileHeight;
+              (contextArr!.impact[level]! as CanvasRenderingContext2D[]).push(
+                canvas.getContext("2d")!,
+              );
+            });
+          });
+          break;
         }
       }
     }
@@ -1078,19 +1075,10 @@ class TDEngine {
     element: TTowerSpriteElements,
     contextArr: CanvasRenderingContext2D[],
     spriteSource: CanvasImageSource,
-    edgeOffset: ITowerSprite["spriteEdgeOffset"],
-    betweenOffset: ITowerSprite["spriteBetweenOffset"],
     towerType: TTowerSpriteTypes,
+    upgradeLevel = 0,
   ) {
     contextArr.forEach((context, index) => {
-      // find the widest or longest value of projectile canvas depending on firing angle
-      const canvasHypot = Math.ceil(
-        Math.hypot(
-          this.predefinedTowerParams[towerType]!.projectileParams.width,
-          this.predefinedTowerParams[towerType]!.projectileParams?.height,
-        ),
-      );
-      //
       switch (element) {
         case "base": {
           this.drawFrame(
@@ -1108,112 +1096,69 @@ class TDEngine {
           break;
         }
         // weapons
-        case "levelOneWeapon": {
+        case "weapon": {
           this.drawFrame(
             context,
             spriteSource,
-            this.map?.mapParams?.gridStep! * index,
+            this.predefinedTowerParams[towerType]?.towerParams?.dimensions[
+              upgradeLevel
+            ].cannonWidth! * index,
             0,
-            this.map?.mapParams?.gridStep!,
-            this.map?.mapParams?.gridStep! * 2,
+            this.predefinedTowerParams[towerType]?.towerParams?.dimensions[
+              upgradeLevel
+            ].cannonWidth!,
+            this.predefinedTowerParams[towerType]?.towerParams?.dimensions[
+              upgradeLevel
+            ].cannonHeight!,
             0,
             0,
-            this.map?.mapParams?.gridStep!,
-            this.map?.mapParams?.gridStep! * 1.5,
+            this.predefinedTowerParams[towerType]?.towerParams?.dimensions[
+              upgradeLevel
+            ].cannonWidth!,
+            this.predefinedTowerParams[towerType]?.towerParams?.dimensions[
+              upgradeLevel
+            ].cannonHeight!,
           );
           break;
         }
-        case "levelTwoWeapon": {
-          this.drawFrame(
-            context,
-            spriteSource,
-            this.map?.mapParams?.gridStep! * index,
-            0,
-            this.map?.mapParams?.gridStep!,
-            this.map?.mapParams?.gridStep! * 2,
-            0,
-            0,
-            this.map?.mapParams?.gridStep!,
-            96,
+        case "projectile": {
+          // find the widest or longest value of projectile canvas depending on firing angle
+          const canvasHypot = Math.ceil(
+            Math.hypot(
+              this.predefinedTowerParams[towerType]!.projectileParams
+                ?.dimensions[upgradeLevel].projectileWidth,
+              this.predefinedTowerParams[towerType]!.projectileParams
+                ?.dimensions[upgradeLevel].projectileHeight,
+            ),
           );
-          break;
-        }
-        case "levelThreeWeapon": {
+          //
           this.drawFrame(
             context,
             spriteSource,
-            this.map?.mapParams?.gridStep! * index,
+            this.predefinedTowerParams[towerType]!.projectileParams?.dimensions[
+              upgradeLevel
+            ].projectileWidth * index,
             0,
-            this.map?.mapParams?.gridStep!,
-            this.map?.mapParams?.gridStep! * 2,
-            0,
-            0,
-            this.map?.mapParams?.gridStep!,
-            96,
-          );
-          break;
-        }
-        // projectiles
-        case "levelOneProjectile": {
-          this.drawFrame(
-            context,
-            spriteSource,
-            this.predefinedTowerParams[towerType]?.projectileParams?.width! *
-              index,
-            0,
-            this.predefinedTowerParams[towerType]?.projectileParams?.width,
-            this.predefinedTowerParams[towerType]?.projectileParams?.height,
+            this.predefinedTowerParams[towerType]!.projectileParams?.dimensions[
+              upgradeLevel
+            ].projectileWidth,
+            this.predefinedTowerParams[towerType]!.projectileParams?.dimensions[
+              upgradeLevel
+            ].projectileHeight,
             (canvasHypot -
-              this.predefinedTowerParams[towerType]?.projectileParams?.width!) /
+              this.predefinedTowerParams[towerType]!.projectileParams
+                ?.dimensions[upgradeLevel].projectileWidth) /
               2,
             (canvasHypot -
-              this.predefinedTowerParams[towerType]?.projectileParams
-                ?.height!) /
+              this.predefinedTowerParams[towerType]!.projectileParams
+                ?.dimensions[upgradeLevel].projectileHeight) /
               2,
-            this.predefinedTowerParams[towerType]?.projectileParams?.width,
-            this.predefinedTowerParams[towerType]?.projectileParams?.height,
-          );
-          break;
-        }
-        case "levelTwoProjectile": {
-          this.drawFrame(
-            context,
-            spriteSource,
-            this.predefinedTowerParams[towerType]?.projectileParams?.width! *
-              index,
-            0,
-            this.predefinedTowerParams[towerType]?.projectileParams?.width,
-            this.predefinedTowerParams[towerType]?.projectileParams?.height,
-            (canvasHypot -
-              this.predefinedTowerParams[towerType]?.projectileParams?.width!) /
-              2,
-            (canvasHypot -
-              this.predefinedTowerParams[towerType]?.projectileParams
-                ?.height!) /
-              2,
-            this.predefinedTowerParams[towerType]?.projectileParams?.width,
-            this.predefinedTowerParams[towerType]?.projectileParams?.height,
-          );
-          break;
-        }
-        case "levelThreeProjectile": {
-          this.drawFrame(
-            context,
-            spriteSource,
-            this.predefinedTowerParams[towerType]?.projectileParams?.width! *
-              index,
-            0,
-            this.predefinedTowerParams[towerType]?.projectileParams?.width,
-            this.predefinedTowerParams[towerType]?.projectileParams?.height,
-            (canvasHypot -
-              this.predefinedTowerParams[towerType]?.projectileParams?.width!) /
-              2,
-            (canvasHypot -
-              this.predefinedTowerParams[towerType]?.projectileParams
-                ?.height!) /
-              2,
-            this.predefinedTowerParams[towerType]?.projectileParams?.width,
-            this.predefinedTowerParams[towerType]?.projectileParams?.height,
+            this.predefinedTowerParams[towerType]!.projectileParams?.dimensions[
+              upgradeLevel
+            ].projectileWidth,
+            this.predefinedTowerParams[towerType]!.projectileParams?.dimensions[
+              upgradeLevel
+            ].projectileHeight,
           );
           break;
         }
@@ -1221,14 +1166,24 @@ class TDEngine {
           this.drawFrame(
             context,
             spriteSource,
-            this.map?.mapParams?.gridStep! * index,
+            this.predefinedTowerParams[towerType]?.projectileParams?.dimensions[
+              upgradeLevel
+            ].projectileWidth! * index,
             0,
-            this.map?.mapParams?.gridStep!,
-            this.map?.mapParams?.gridStep!,
+            this.predefinedTowerParams[towerType]?.projectileParams?.dimensions[
+              upgradeLevel
+            ].projectileWidth!,
+            this.predefinedTowerParams[towerType]?.projectileParams?.dimensions[
+              upgradeLevel
+            ].projectileHeight!,
             0,
             0,
-            this.map?.mapParams?.gridStep!,
-            this.map?.mapParams?.gridStep!,
+            this.predefinedTowerParams[towerType]?.projectileParams?.dimensions[
+              upgradeLevel
+            ].projectileWidth!,
+            this.predefinedTowerParams[towerType]?.projectileParams?.dimensions[
+              upgradeLevel
+            ].projectileHeight!,
           );
           break;
         }
@@ -1247,29 +1202,58 @@ class TDEngine {
 
     if (e.key === "1") {
       this.draftTower = null;
-      this.buildFirstTower();
+      this.isShowGrid = false;
+      this.buildTower("one", 0);
     }
     if (e.key === "2") {
       this.draftTower = null;
-      this.buildSecondTower();
+      this.buildTower("one", 1);
     }
     if (e.key === "3") {
       this.draftTower = null;
-      this.buildThirdTower();
+      this.buildTower("one", 2);
     }
     if (e.key === "4") {
-      // release all tower target
-      for (const tower of this.towers!) {
-        tower.target = null;
-      }
+      this.draftTower = null;
+      this.buildTower("two", 0);
     }
     if (e.key === "5") {
-      // remove all projectiles
-      this.projectiles = [];
+      this.draftTower = null;
+      this.buildTower("two", 1);
     }
     if (e.key === "6") {
-      // spawn next wave
-      this.waveGenerator?.spawnEnemies();
+      this.draftTower = null;
+      this.buildTower("two", 2);
+    }
+    if (e.key === "7") {
+      this.draftTower = null;
+      this.buildTower("three", 0);
+    }
+    if (e.key === "8") {
+      this.draftTower = null;
+      this.buildTower("three", 1);
+    }
+    if (e.key === "9") {
+      this.draftTower = null;
+      this.buildTower("three", 2);
+    }
+    if (e.key === "q") {
+      this.draftTower = null;
+      this.buildTower("four", 0);
+    }
+    if (e.key === "w") {
+      this.draftTower = null;
+      this.buildTower("four", 1);
+    }
+    if (e.key === "e") {
+      this.draftTower = null;
+      this.buildTower("four", 2);
+    }
+    if (e.key === "s") {
+      this.gameStart();
+    }
+    if (e.key === "p") {
+      this.gamePause();
     }
     // log mode
     if (e.key === "0") {
@@ -1300,51 +1284,31 @@ class TDEngine {
     }
   }
 
-  public buildFirstTower = () => {
-    if (this.isEnoughMoney(this.towerOneParam!.towerParams.price)) {
+  public buildTower = (
+    type: TTowerSpriteTypes,
+    upgradeLevel: Tower["upgradeLevel"],
+  ) => {
+    if (
+      this.isEnoughMoney(this.predefinedTowerParams[type]!.towerParams.price)
+    ) {
       this.isCanBuild = true;
       this.draftTower = new Tower(
         this,
-        "one",
-        0,
+        type,
+        upgradeLevel,
         this.draftBuildCoordinates,
-        this.towerOneParam!.towerParams,
-        this.towerOneParam!.projectileParams,
+        structuredClone(this.predefinedTowerParams[type]?.towerParams!),
+        structuredClone(this.predefinedTowerParams[type]?.projectileParams!),
       );
     }
   };
 
-  public buildSecondTower = () => {
-    if (this.isEnoughMoney(this.towerTwoParam!.towerParams.price)) {
-      this.isCanBuild = true;
-      this.draftTower = new Tower(
-        this,
-        "one",
-        1,
-        this.draftBuildCoordinates,
-        this.towerTwoParam!.towerParams,
-        this.towerTwoParam!.projectileParams,
-      );
-    }
-  };
-
-  public buildThirdTower = () => {
-    if (this.isEnoughMoney(this.towerThreeParam!.towerParams.price)) {
-      this.isCanBuild = true;
-      this.draftTower = new Tower(
-        this,
-        "one",
-        2,
-        this.draftBuildCoordinates,
-        this.towerThreeParam!.towerParams,
-        this.towerThreeParam!.projectileParams,
-      );
-    }
-  };
-
-  public findClosestTile(coordinates: ITwoDCoordinates) {
+  public findClosestTile(
+    coordinates: ITwoDCoordinates,
+    tilesArr: ITwoDCoordinates[] = this.map?.mapParams.mapTilesArr!,
+  ): ITwoDCoordinates {
     let minDistance = this.map?.mapParams.width;
-    for (let tile of this.map?.mapParams.mapTilesArr!) {
+    tilesArr.forEach((tile) => {
       const distance =
         (tile.x -
           coordinates.x! +
@@ -1354,19 +1318,13 @@ class TDEngine {
             coordinates.x! +
             this.map?.mapParams.gridStep! -
             this.map?.mapParams?.tileCenter!) +
-        (tile.y -
-          coordinates.y! +
-          this.map?.mapParams.gridStep! +
-          this.map?.mapParams?.tileCenter!) *
-          (tile.y -
-            coordinates.y! +
-            this.map?.mapParams.gridStep! +
-            this.map?.mapParams?.tileCenter!);
+        (tile.y - coordinates.y! + this.map?.mapParams?.tileCenter!) *
+          (tile.y - coordinates.y! + this.map?.mapParams?.tileCenter!);
       if (distance < minDistance!) {
         minDistance = distance;
         this.map!.mapParams.closestTile! = tile!;
       }
-    }
+    });
 
     this.draftBuildCoordinates = {
       x: this.map?.mapParams.closestTile.x! + this.map?.mapParams.gridStep!,
@@ -1374,35 +1332,75 @@ class TDEngine {
     };
 
     return {
-      x: this.map?.mapParams.closestTile.x,
+      x: this.map?.mapParams.closestTile.x!,
       y: this.map?.mapParams.closestTile.y!,
     };
   }
 
-  highlightTile(coords: ITwoDCoordinates) {
-    this.context?.beginPath();
-    this.context!.strokeStyle = "green";
-    this.context?.setLineDash([]);
-    this.context?.strokeRect(
+  public highlightTile(
+    coords: ITwoDCoordinates,
+    context: CanvasRenderingContext2D = this.context!,
+  ) {
+    context.beginPath();
+    context.strokeStyle = "green";
+    context.setLineDash([]);
+    context.strokeRect(
       coords.x,
       coords.y,
       this.map?.mapParams.gridStep!,
       this.map?.mapParams.gridStep!,
     );
-    this.context?.closePath();
+    context.closePath();
   }
 
   public canvasMouseMoveCallback = (e: MouseEvent) => {
-    this.cursorPosition = { x: e.offsetX, y: e.offsetY };
-    this.findClosestTile(this.cursorPosition);
+    this.cursorPosition = {
+      x: e.offsetX,
+      y: e.offsetY,
+    };
+    this.map!.mapParams.closestTile = this.findClosestTile(this.cursorPosition);
     if (this.isCanBuild) {
       this.draftShowTower();
     }
   };
 
   public canvasClickCallback = (e: MouseEvent) => {
-    this.draftBuildTower();
+    // build tower
+    if (this.isCanBuild) {
+      this.draftBuildTower();
+    } else {
+      this.selectTower();
+    }
   };
+
+  public selectTower() {
+    if (!this.towers?.length) return;
+    const closestTile = this.findClosestTile(
+      { x: this.cursorPosition.x + 64, y: this.cursorPosition.y + 64 },
+      this.map?.mapParams?.towerTilesArr,
+    );
+    // closestTile.x -= 64;
+    // closestTile.y -= 64;
+    this.towers.forEach((tower) => {
+      // remove selection
+      if (tower.towerParams.isSelected) {
+        tower.towerParams.isSelected = false;
+        tower.drawBase();
+      }
+      // set new selection
+      if (
+        tower.currentPosition.x === closestTile.x &&
+        tower.currentPosition.y === closestTile.y
+      ) {
+        // debug
+        console.log(`gotcha tower!`);
+        console.log(tower);
+        //
+        tower.towerParams.isSelected = true;
+        tower.drawBase();
+      }
+    });
+  }
 
   public gameWindowKeydown = (e: KeyboardEvent) => {
     this.manageHotkeys(e);
@@ -1458,7 +1456,10 @@ class TDEngine {
           this.draftTower!.draw();
 
           // enable attack timer
-          this.draftTower?.setAttackInterval();
+          // this.draftTower?.setAttackInterval();
+
+          // push tile to towerTilesArr
+          this.map!.mapParams.towerTilesArr.push(this.draftBuildCoordinates);
 
           // pop chosen tile from available space to build
           this.map!.mapParams.mapTilesArr! =
@@ -1586,18 +1587,6 @@ class TDEngine {
 
   public pushProjectile(projectile: Projectile) {
     this.projectiles?.push(projectile);
-  }
-
-  public get towerOneParam() {
-    return structuredClone(this.predefinedTowerParams.one);
-  }
-
-  public get towerTwoParam() {
-    return structuredClone(this.predefinedTowerParams.two);
-  }
-
-  public get towerThreeParam() {
-    return structuredClone(this.predefinedTowerParams.three);
   }
 }
 

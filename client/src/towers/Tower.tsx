@@ -1,10 +1,9 @@
 import TDEngine, {
   ITwoDCoordinates,
-  TTowerSpriteElements,
   TTowerSpriteTypes,
 } from "../engine/TDEngine";
 import Enemy from "../enemies/Enemy";
-import Projectile, { IProjectile } from "../projectiles/Projectile";
+import Projectile from "../projectiles/Projectile";
 
 export interface ITower {
   engine: TDEngine;
@@ -14,8 +13,11 @@ export interface ITower {
     attackRate: number;
     attackDamage: number;
     attackRange: number;
-    width: number;
-    height: number;
+    baseWidth: number;
+    baseHeight: number;
+    dimensions: Record<string, number>[];
+    cannonFrameLimit: number;
+    isSelected: boolean;
     rectCenterX: number;
     rectCenterY: number;
     strokeStyle: string;
@@ -31,10 +33,10 @@ export interface ITower {
     targetY: number;
     rectCenterX: number;
     rectCenterY: number;
-    width: number;
-    height: number;
+    dimensions: Record<string, number>[];
     projectileHitAlive: number;
-    frameLimit: number;
+    projectileFrameLimit: number;
+    impactFrameLimit: number;
   };
   image: CanvasImageSource;
   attackIntervalTimer: NodeJS.Timer | null;
@@ -57,11 +59,33 @@ class Tower {
       attackRate: 1000,
       attackDamage: 30,
       attackRange: 120,
-      width: 64,
-      height: 128,
+      baseWidth: 64,
+      baseHeight: 128,
+      dimensions: [
+        {
+          cannonWidth: 64,
+          cannonHeight: 64,
+          cannonOffsetX: 0,
+          cannonOffsetY: 0,
+        },
+        {
+          cannonWidth: 64,
+          cannonHeight: 64,
+          cannonOffsetX: 0,
+          cannonOffsetY: 0,
+        },
+        {
+          cannonWidth: 64,
+          cannonHeight: 64,
+          cannonOffsetX: 0,
+          cannonOffsetY: 0,
+        },
+      ],
+      cannonFrameLimit: 3,
+      isSelected: false,
       rectCenterX: 0,
       rectCenterY: 0,
-      strokeStyle: "red",
+      strokeStyle: "rgba(0, 255, 0, 0.2)",
       firingAngle: 0,
       prevFiringAngle: 0,
       fireFromCoords: { x: 0, y: 0 },
@@ -74,10 +98,23 @@ class Tower {
       targetY: 0,
       rectCenterX: 0,
       rectCenterY: 0,
-      width: 10,
-      height: 10,
+      dimensions: [
+        {
+          projectileWidth: 22,
+          projectileHeight: 40,
+        },
+        {
+          projectileWidth: 22,
+          projectileHeight: 40,
+        },
+        {
+          projectileWidth: 22,
+          projectileHeight: 40,
+        },
+      ],
       projectileHitAlive: 100,
-      frameLimit: 3,
+      projectileFrameLimit: 3,
+      impactFrameLimit: 6,
     },
     public renderParams = {
       cannonWeaponArr: "levelOneWeapon",
@@ -89,48 +126,16 @@ class Tower {
     },
     public attackIntervalTimer: ITower["attackIntervalTimer"] = null,
   ) {
-    this.towerParams.rectCenterX = this.towerParams.width / 2;
-    this.towerParams.rectCenterY = this.towerParams.height / 2;
-
-    // set proper render weapon array
-    this.renderParams.cannonWeaponArr =
-      this.upgradeLevel === 0
-        ? "levelOneWeapon"
-        : this.upgradeLevel === 1
-        ? "levelTwoWeapon"
-        : "levelThreeWeapon";
-
-    // set proper render projectile array
-    this.renderParams.cannonProjectileArr =
-      this.upgradeLevel === 0
-        ? "levelOneProjectile"
-        : this.upgradeLevel === 1
-        ? "levelTwoProjectile"
-        : "levelThreeProjectile";
-
-    // predefine render params to each tower
-    switch (this.type) {
-      case "one": {
-        switch (this.upgradeLevel) {
-          case 0: {
-            this.renderParams.cannonOffset.x = 0;
-            this.renderParams.cannonOffset.y = 8;
-            break;
-          }
-          case 1: {
-            this.renderParams.cannonOffset.x = 0;
-            this.renderParams.cannonOffset.y = 18;
-            break;
-          }
-          case 2: {
-            this.renderParams.cannonOffset.x = 0;
-            this.renderParams.cannonOffset.y = 24;
-            break;
-          }
-        }
-        break;
-      }
-    }
+    this.towerParams.rectCenterX = this.towerParams.baseWidth / 2;
+    this.towerParams.rectCenterY = this.towerParams.baseWidth / 2;
+    this.renderParams.cannonOffset.x =
+      this.engine.predefinedTowerParams[this.type]?.towerParams?.dimensions[
+        this.upgradeLevel
+      ].cannonOffsetX!;
+    this.renderParams.cannonOffset.y =
+      this.engine.predefinedTowerParams[this.type]?.towerParams?.dimensions[
+        this.upgradeLevel
+      ].cannonOffsetY!;
   }
 
   public getNextCannonFrame() {
@@ -141,6 +146,7 @@ class Tower {
       ) {
         this.renderParams.cannonCurrentFrame += 1;
       } else {
+        this.renderParams.isCannonAnimate = false;
         return 0;
       }
     } else {
@@ -149,16 +155,31 @@ class Tower {
     return this.renderParams.cannonCurrentFrame;
   }
 
-  public drawBase(context: CanvasRenderingContext2D) {
+  public drawBase(
+    context: CanvasRenderingContext2D = this.engine.towerContext!,
+  ) {
     // tower base
     context.beginPath();
     context.drawImage(
-      this.engine.towerSprites[this.type]!.canvasArr?.base![this.upgradeLevel]!,
-      this.currentPosition.x - this.towerParams.width,
-      this.currentPosition.y - this.towerParams.height,
-      this.towerParams.width,
-      this.towerParams.height,
+      this.engine.towerSprites[this.type]!.canvasArr?.base![
+        this.upgradeLevel
+      ]! as HTMLCanvasElement,
+      this.currentPosition.x - this.towerParams.baseWidth,
+      this.currentPosition.y - this.towerParams.baseHeight,
+      this.towerParams.baseWidth,
+      this.towerParams.baseHeight,
     );
+    // is tower selected?
+    if (this.towerParams.isSelected) {
+      context.strokeStyle = "red";
+      context.lineWidth = 1;
+      context.strokeRect(
+        this.currentPosition.x - this.engine.map?.mapParams?.gridStep!,
+        this.currentPosition.y - this.engine.map?.mapParams?.gridStep!,
+        this.engine.map?.mapParams?.gridStep!,
+        this.engine.map?.mapParams?.gridStep!,
+      );
+    }
     context.closePath();
   }
 
@@ -168,19 +189,26 @@ class Tower {
     context.beginPath();
     context.translate(
       this.currentPosition.x -
-        this.towerParams.rectCenterX +
-        this.renderParams.cannonOffset.x,
+        this.towerParams.baseWidth +
+        this.towerParams.baseWidth / 2,
       this.currentPosition.y -
-        this.towerParams.rectCenterY -
-        this.renderParams.cannonOffset.y,
+        this.towerParams.baseHeight +
+        this.towerParams.baseWidth / 2 +
+        this.towerParams.dimensions[this.upgradeLevel].cannonOffsetY,
     );
-    context.rotate(this.towerParams.firingAngle - 1);
+    context.rotate(this.towerParams.firingAngle - 1.2);
+    context.translate(
+      -(this.towerParams.dimensions[this.upgradeLevel].cannonWidth / 2),
+      -(this.towerParams.dimensions[this.upgradeLevel].cannonHeight / 2),
+    );
     context.drawImage(
-      this.engine.towerSprites[this.type]!.canvasArr?.[
-        this.renderParams.cannonWeaponArr as TTowerSpriteElements
-      ]![this.renderParams.isCannonAnimate ? this.getNextCannonFrame() : 0]!,
-      -this.towerParams.rectCenterX,
-      -this.towerParams.rectCenterY + this.projectileParams.width,
+      (
+        this.engine.towerSprites[this.type]!.canvasArr?.weapon![
+          this.upgradeLevel
+        ]! as HTMLCanvasElement[]
+      )[this.getNextCannonFrame()]!,
+      0,
+      0,
     );
     context.closePath();
     context.restore();
@@ -190,13 +218,50 @@ class Tower {
     this.towerParams.fireFromCoords = {
       x:
         this.currentPosition.x -
-        this.towerParams.rectCenterX -
-        this.projectileParams.width,
+        this.towerParams.baseWidth +
+        this.towerParams.baseWidth / 2 +
+        (this.towerParams.dimensions[this.upgradeLevel].cannonWidth / 4) *
+          Math.cos(this.towerParams.firingAngle - Math.PI),
       y:
         this.currentPosition.y -
-        this.towerParams.rectCenterY -
-        this.projectileParams.height,
+        this.towerParams.baseHeight +
+        this.towerParams.baseWidth / 2 +
+        (this.towerParams.dimensions[this.upgradeLevel].cannonHeight / 4) *
+          Math.sin(this.towerParams.firingAngle - Math.PI),
     };
+    /*
+    // debug
+    context.fillStyle = "red";
+    context.fillRect(
+      this.towerParams.fireFromCoords.x,
+      this.towerParams.fireFromCoords.y,
+      2,
+      2,
+    );
+    this.towerParams.fireFromCoords = {
+      x:
+        this.currentPosition.x -
+        this.towerParams.baseWidth +
+        this.towerParams.baseWidth / 2,
+      y:
+        this.currentPosition.y -
+        this.towerParams.baseHeight +
+        this.towerParams.baseWidth / 2 +
+        this.towerParams.dimensions[this.upgradeLevel].cannonOffsetY,
+    };
+
+    this.towerParams.fireFromCoords = {
+      x:
+        this.currentPosition.x -
+        this.towerParams.baseWidth +
+        this.towerParams.baseWidth / 2,
+      y:
+        this.currentPosition.y -
+        this.towerParams.baseHeight +
+        this.towerParams.baseWidth / 2 +
+        this.towerParams.dimensions[this.upgradeLevel].cannonOffsetY,
+    };
+     */
   }
 
   public drawDraft() {
@@ -221,33 +286,41 @@ class Tower {
   public setAttackInterval = () => {
     if (this.attackIntervalTimer) return;
     // clear memory
-    clearInterval(this.attackIntervalTimer!);
-    this.attackIntervalTimer = null;
+    this.clearAttackInterval();
     // initial fire
     this.isCanFire = true;
+    this.renderParams.cannonCurrentFrame = 0;
+    this.renderParams.isCannonAnimate = true;
     // then set attack interval
     this.attackIntervalTimer = setInterval(() => {
       this.renderParams.cannonCurrentFrame = 0;
-      this.renderParams.isCannonAnimate = true;
+      this.renderParams.isCannonAnimate = !!this.target;
       this.isCanFire = true;
     }, this.towerParams.attackRate);
   };
 
-  public drawTowerRange() {
-    this.engine.buildContext?.beginPath();
-    this.engine.buildContext!.lineWidth = 0.5;
-    this.engine.buildContext?.setLineDash([10, 15]);
-    this.engine.buildContext!.strokeStyle = this.towerParams.strokeStyle;
+  public clearAttackInterval = () => {
+    clearInterval(this.attackIntervalTimer!);
+    this.attackIntervalTimer = null;
+  };
+
+  public drawTowerRange(
+    context: CanvasRenderingContext2D = this.engine.buildContext!,
+  ) {
+    context.beginPath();
+    context.lineWidth = 1;
+    // context.setLineDash([10, 15]);
+    context.fillStyle = this.towerParams.strokeStyle;
     // draw tower range
-    this.engine.buildContext?.arc(
-      this.currentPosition.x - this.towerParams.width / 2,
-      this.currentPosition.y - this.towerParams.height / 2,
+    context.arc(
+      this.currentPosition.x - this.towerParams.baseWidth / 2,
+      this.currentPosition.y - this.towerParams.baseHeight / 2,
       this.towerParams.attackRange,
       0,
       360,
     );
-    this.engine.buildContext?.stroke();
-    this.engine.buildContext?.closePath();
+    context.fill();
+    context.closePath();
   }
 
   public isEnemyInRange(enemy: Enemy) {
@@ -274,7 +347,7 @@ class Tower {
     if (!this.engine.enemies!.length) return;
     if (!this.target) {
       this.engine.enemies?.forEach((enemy) => {
-        // check range only for closest enemies
+        // check range only for the closest enemies
         if (
           Math.abs(enemy.currentPosition.x - this.currentPosition.x) <
             this.towerParams.attackRange &&
@@ -288,9 +361,7 @@ class Tower {
     } else {
       if (!this.isEnemyInRange(this.target)) {
         this.target = null;
-        this.renderParams.isCannonAnimate = false;
-        clearInterval(this.attackIntervalTimer!);
-        this.attackIntervalTimer = null;
+        this.clearAttackInterval();
       }
     }
   }
@@ -306,24 +377,21 @@ class Tower {
       this.target.currentPosition.y -
       this.currentPosition.y +
       this.target.enemyParams.rectCenterY!;
+
     this.towerParams.firingAngle =
       Math.atan2(yDistance, xDistance) + Math.PI - Math.PI / 4;
-    // this.towerParams.firingAngle = Math.floor(
-    //  Math.atan2(yDistance, xDistance) + Math.PI,
-    // ); // Math.atan2(yDistance, xDistance) + Math.PI;
   }
 
   public fire() {
     if (this.isCanFire && this.target) {
-      this.engine.projectiles = [
-        ...this.engine.projectiles!,
+      this.engine.pushProjectile(
         new Projectile(
           this.target!,
           this,
           this.towerParams.attackDamage,
           this.towerParams.fireFromCoords,
         ),
-      ];
+      );
 
       this.isCanFire = false;
     }

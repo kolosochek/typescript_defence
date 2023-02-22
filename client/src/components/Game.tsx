@@ -1,8 +1,5 @@
 import { FC, PropsWithChildren, useEffect, useRef, useState } from "react";
-import TDEngine, {
-    ITDEngine,
-    IWaveGenerator,
-} from "../engine/TDEngine";
+import TDEngine, { ITDEngine, IWaveGenerator } from "../engine/TDEngine";
 import Tower from "../towers/Tower";
 import Enemy from "../enemies/Enemy";
 import Map from "../maps/Map";
@@ -61,7 +58,7 @@ export const Game: FC<IGameProps> = ({ engine = new TDEngine() }) => {
     const gameWindow = useRef<HTMLDivElement>(null);
     // tower sprites ref
     // tower 1
-    const towerOneBaseSprite = useRef<HTMLImageElement>(null);
+    const towerOneBase = useRef<HTMLImageElement>(null);
     const towerOneImpact = useRef<HTMLImageElement>(null);
     const towerOneLevelOneWeapon = useRef<HTMLImageElement>(null);
     const towerOneLevelOneProjectile = useRef<HTMLImageElement>(null);
@@ -70,7 +67,32 @@ export const Game: FC<IGameProps> = ({ engine = new TDEngine() }) => {
     const towerOneLevelThreeWeapon = useRef<HTMLImageElement>(null);
     const towerOneLevelThreeProjectile = useRef<HTMLImageElement>(null);
     // tower 2
-    const towerTwoBaseSprite = useRef<HTMLImageElement>(null);
+    const towerTwoBase = useRef<HTMLImageElement>(null);
+    const towerTwoImpact = useRef<HTMLImageElement>(null);
+    const towerTwoLevelOneWeapon = useRef<HTMLImageElement>(null);
+    const towerTwoLevelOneProjectile = useRef<HTMLImageElement>(null);
+    const towerTwoLevelTwoWeapon = useRef<HTMLImageElement>(null);
+    const towerTwoLevelTwoProjectile = useRef<HTMLImageElement>(null);
+    const towerTwoLevelThreeWeapon = useRef<HTMLImageElement>(null);
+    const towerTwoLevelThreeProjectile = useRef<HTMLImageElement>(null);
+    // tower 3
+    const towerThreeBase = useRef<HTMLImageElement>(null);
+    const towerThreeImpact = useRef<HTMLImageElement>(null);
+    const towerThreeLevelOneWeapon = useRef<HTMLImageElement>(null);
+    const towerThreeLevelOneProjectile = useRef<HTMLImageElement>(null);
+    const towerThreeLevelTwoWeapon = useRef<HTMLImageElement>(null);
+    const towerThreeLevelTwoProjectile = useRef<HTMLImageElement>(null);
+    const towerThreeLevelThreeWeapon = useRef<HTMLImageElement>(null);
+    const towerThreeLevelThreeProjectile = useRef<HTMLImageElement>(null);
+    // tower 4
+    const towerFourBase = useRef<HTMLImageElement>(null);
+    const towerFourImpact = useRef<HTMLImageElement>(null);
+    const towerFourLevelOneWeapon = useRef<HTMLImageElement>(null);
+    const towerFourLevelOneProjectile = useRef<HTMLImageElement>(null);
+    const towerFourLevelTwoWeapon = useRef<HTMLImageElement>(null);
+    const towerFourLevelTwoProjectile = useRef<HTMLImageElement>(null);
+    const towerFourLevelThreeWeapon = useRef<HTMLImageElement>(null);
+    const towerFourLevelThreeProjectile = useRef<HTMLImageElement>(null);
     // enemy sprites ref
     const firebugSprite = useRef<HTMLImageElement>(null);
     const leafbugSprite = useRef<HTMLImageElement>(null);
@@ -94,11 +116,38 @@ export const Game: FC<IGameProps> = ({ engine = new TDEngine() }) => {
     const [enemiesLeft, setEnemiesLeft] = useState<IGameProps["wave"]>(
         engine.enemies?.length,
     );
-    const [isNotEnoughMoney, setIsNotEnoughMoney] = useState<
-        ITDEngine["isNotEnoughMoney"]
-    >(engine.isNotEnoughMoney);
     const [isGameOver, setIsGameOver] = useState<boolean>(false);
     const [isGameStarted, setIsGameStarted] = useState<boolean>(false);
+
+    const addEventListeners = () => {
+        // add canvas mousemove event listener
+        buildCanvas.current?.addEventListener(
+            "mousemove",
+            engine.canvasMouseMoveCallback,
+        );
+        // add canvas mouse click event listener
+        buildCanvas.current?.addEventListener("click", engine.canvasClickCallback);
+        // add escape hotkey to cancel building mode
+        gameWindow.current?.addEventListener("keydown", engine.gameWindowKeydown);
+    };
+
+    const removeEventListeners = () => {
+        // remove canvas mousemove event listener
+        buildCanvas.current?.removeEventListener(
+            "mousemove",
+            engine.canvasMouseMoveCallback,
+        );
+        // remove canvas mouse click event listener
+        buildCanvas.current?.removeEventListener(
+            "click",
+            engine.canvasClickCallback,
+        );
+        // remove escape hotkey to cancel building mode
+        gameWindow.current?.removeEventListener(
+            "keydown",
+            engine.gameWindowKeydown,
+        );
+    };
 
     const gameLoop = () => {
         setTimeout(() => {
@@ -181,9 +230,10 @@ export const Game: FC<IGameProps> = ({ engine = new TDEngine() }) => {
                 setMoney(engine.money);
                 setWave(engine.waveGenerator?.waveParams.currentWave);
                 setEnemiesLeft(engine.enemies?.length);
-                setIsNotEnoughMoney(engine.isNotEnoughMoney);
                 if (isGameOver) {
                     setIsGameOver(false);
+                    engine.sound?.soundArr?.gameStart?.pause();
+                    engine.sound!.soundArr.gameStart!.currentTime = 0;
                 }
 
                 // enemy init || move
@@ -237,6 +287,11 @@ export const Game: FC<IGameProps> = ({ engine = new TDEngine() }) => {
                             tower.findTarget();
                         }
                     });
+                } else {
+                    // dirty hack
+                    engine.towers?.forEach((tower: Tower) => {
+                        tower.renderParams.isCannonAnimate = false;
+                    });
                 }
 
                 // move enemies
@@ -267,6 +322,7 @@ export const Game: FC<IGameProps> = ({ engine = new TDEngine() }) => {
     };
 
     useEffect(() => {
+        /* /DRAW BETWEEN ROUTES */
         if (!engine.context) {
             engine.setContext(canvas.current?.getContext("2d")!);
             engine.setBuildContext(buildCanvas.current?.getContext("2d")!);
@@ -282,17 +338,48 @@ export const Game: FC<IGameProps> = ({ engine = new TDEngine() }) => {
             // set new map
             engine.map = new Map(engine);
         }
+        // init level map draw
+        engine.map?.drawMap();
+
+        // draw towers
+        if (engine.towers?.length) {
+            engine.towers.forEach((tower) => {
+                tower.draw();
+            });
+        }
+
+        // draw enemies
+        if (engine.enemies?.length) {
+            engine.enemies?.forEach((enemy: Enemy) => {
+                if (enemy.renderParams.isAnimateDeath) return;
+                if (
+                    enemy.currentPosition.x +
+                    enemy.enemyParams.width! +
+                    enemy.randomOffset.x <
+                    0
+                )
+                    return;
+                enemy.draw(engine.enemyContext!, true);
+            });
+        }
+
+        // draw dead enemies
+        if (engine.deadEnemies?.length) {
+            engine.deadEnemies?.forEach((deadEnemy: Enemy) => {
+                deadEnemy.draw(engine.deadEnemyContext!, false);
+            });
+        }
+
+        // draw projectiles
+        if (engine.projectiles?.length) {
+            engine.projectiles?.forEach((projectile: Projectile) => {
+                projectile.draw();
+            });
+        }
+        /* /DRAW BETWEEN ROUTES */
 
         /* BUILD MODE */
-        // add canvas mousemove event listener
-        buildCanvas.current?.addEventListener(
-            "mousemove",
-            engine.canvasMouseMoveCallback,
-        );
-        // add canvas mouse click event listener
-        buildCanvas.current?.addEventListener("click", engine.canvasClickCallback);
-        // add escape hotkey to cancel building mode
-        gameWindow.current?.addEventListener("keydown", engine.gameWindowKeydown);
+        addEventListeners();
         /* /BUILD MODE */
 
         /* LOAD SPRITES */
@@ -301,22 +388,98 @@ export const Game: FC<IGameProps> = ({ engine = new TDEngine() }) => {
             engine.towerSprites = {
                 one: {
                     spriteSource: {
-                        base: towerOneBaseSprite.current!,
-                        impact: towerOneImpact.current!,
-                        levelOneWeapon: towerOneLevelOneWeapon.current!,
-                        levelOneProjectile: towerOneLevelOneProjectile.current!,
-                        levelTwoWeapon: towerOneLevelTwoWeapon.current!,
-                        levelTwoProjectile: towerOneLevelTwoProjectile.current!,
-                        levelThreeWeapon: towerOneLevelThreeWeapon.current!,
-                        levelThreeProjectile: towerOneLevelThreeProjectile.current!,
+                        base: towerOneBase.current!,
+                        impact: [
+                            towerOneImpact.current!,
+                            towerOneImpact.current!,
+                            towerOneImpact.current!,
+                        ],
+                        weapon: [
+                            towerOneLevelOneWeapon.current!,
+                            towerOneLevelTwoWeapon.current!,
+                            towerOneLevelThreeWeapon.current!,
+                        ],
+                        projectile: [
+                            towerOneLevelOneProjectile.current!,
+                            towerOneLevelTwoProjectile.current!,
+                            towerOneLevelThreeProjectile.current!,
+                        ],
                     },
                     canvasArr: null,
                     canvasContextArr: null,
-                    framesPerSprite: 1,
+                },
+                two: {
+                    spriteSource: {
+                        base: towerTwoBase.current!,
+                        impact: [
+                            towerTwoImpact.current!,
+                            towerTwoImpact.current!,
+                            towerTwoImpact.current!,
+                        ],
+                        weapon: [
+                            towerTwoLevelOneWeapon.current!,
+                            towerTwoLevelTwoWeapon.current!,
+                            towerTwoLevelThreeWeapon.current!,
+                        ],
+                        projectile: [
+                            towerTwoLevelOneProjectile.current!,
+                            towerTwoLevelTwoProjectile.current!,
+                            towerTwoLevelThreeProjectile.current!,
+                        ],
+                    },
+                    canvasArr: null,
+                    canvasContextArr: null,
+                },
+                three: {
+                    spriteSource: {
+                        base: towerThreeBase.current!,
+                        impact: [
+                            towerThreeImpact.current!,
+                            towerThreeImpact.current!,
+                            towerThreeImpact.current!,
+                        ],
+                        weapon: [
+                            towerThreeLevelOneWeapon.current!,
+                            towerThreeLevelTwoWeapon.current!,
+                            towerThreeLevelThreeWeapon.current!,
+                        ],
+                        projectile: [
+                            towerThreeLevelOneProjectile.current!,
+                            towerThreeLevelTwoProjectile.current!,
+                            towerThreeLevelThreeProjectile.current!,
+                        ],
+                    },
+                    canvasArr: null,
+                    canvasContextArr: null,
+                },
+                four: {
+                    spriteSource: {
+                        base: towerFourBase.current!,
+                        impact: [
+                            towerFourImpact.current!,
+                            towerFourImpact.current!,
+                            towerFourImpact.current!,
+                        ],
+                        weapon: [
+                            towerFourLevelOneWeapon.current!,
+                            towerFourLevelTwoWeapon.current!,
+                            towerFourLevelThreeWeapon.current!,
+                        ],
+                        projectile: [
+                            towerFourLevelOneProjectile.current!,
+                            towerFourLevelTwoProjectile.current!,
+                            towerFourLevelThreeProjectile.current!,
+                        ],
+                    },
+                    canvasArr: null,
+                    canvasContextArr: null,
                 },
             };
 
             engine.splitTowerSprite("one");
+            engine.splitTowerSprite("two");
+            engine.splitTowerSprite("three");
+            engine.splitTowerSprite("four");
 
             // debug
             console.log(`engine`);
@@ -361,10 +524,10 @@ export const Game: FC<IGameProps> = ({ engine = new TDEngine() }) => {
                     spriteBetweenOffset: 0,
                     spriteRightRow: 6,
                     spriteLeftRow: 7,
-                    spriteUpRow: 7,
-                    spriteDownRow: 7,
-                    framesPerSprite: 8,
-                    deathFramesPerSprite: 11,
+                    spriteUpRow: 5,
+                    spriteDownRow: 4,
+                    framesPerSprite: 12,
+                    deathFramesPerSprite: 14,
                 },
                 firewasp: {
                     spriteSource: firewaspSprite.current,
@@ -388,11 +551,6 @@ export const Game: FC<IGameProps> = ({ engine = new TDEngine() }) => {
         }
         /* /LOAD SPRITES */
 
-        if (!engine.waveGenerator?.isInitialized) {
-            // init level map draw
-            engine.map?.drawMap();
-        }
-
         // game start
         if (engine.isGameStarted) {
             gameLoop();
@@ -401,6 +559,14 @@ export const Game: FC<IGameProps> = ({ engine = new TDEngine() }) => {
             cancelAnimationFrame(engine.animationFrameId);
             cancelIdleCallback(engine.requestIdleCallback);
         }
+
+        // componentWillUnmount
+        return () => {
+            removeEventListeners();
+            // pause teh game
+            cancelAnimationFrame(engine.animationFrameId);
+            cancelIdleCallback(engine.requestIdleCallback);
+        };
     }, [isGameStarted]);
 
     return (
@@ -422,6 +588,7 @@ export const Game: FC<IGameProps> = ({ engine = new TDEngine() }) => {
                     style={{
                         position: "absolute",
                         zIndex: 999999,
+                        opacity: 0.4,
                     }}
                     tabIndex={1}
                 />
@@ -490,7 +657,11 @@ export const Game: FC<IGameProps> = ({ engine = new TDEngine() }) => {
                     id="mapCanvas"
                     width={engine.map?.mapParams.width}
                     height={engine.map?.mapParams.height}
-                    style={{ position: "absolute", zIndex: 9 }}
+                    style={{
+                        position: "absolute",
+                        zIndex: 9,
+                        background: "url('/sprites/map/grass.png') repeat",
+                    }}
                 />
             </div>
             <div className="b-game-sprites">
@@ -499,8 +670,8 @@ export const Game: FC<IGameProps> = ({ engine = new TDEngine() }) => {
                         <img
                             id="towerOneBase"
                             alt="towerOneSprite sprite"
-                            src="sprites/tower/one/towerOneBaseSprite.png"
-                            ref={towerOneBaseSprite}
+                            src="sprites/tower/one/towerOneBase.png"
+                            ref={towerOneBase}
                         />
                         <img
                             id="towerOneImpact"
@@ -549,8 +720,150 @@ export const Game: FC<IGameProps> = ({ engine = new TDEngine() }) => {
                         <img
                             id="towerTwo"
                             alt="towerTwoSprite sprite"
-                            src="sprites/tower/two/towerTwoBaseSprite.png"
-                            ref={towerTwoBaseSprite}
+                            src="sprites/tower/two/towerTwoBase.png"
+                            ref={towerTwoBase}
+                        />
+                        <img
+                            id="towerTwoImpact"
+                            alt="towerTwoImpactSprite sprite"
+                            src="sprites/tower/two/towerTwoImpact.png"
+                            ref={towerTwoImpact}
+                        />
+                        <img
+                            id="towerTwoLevelOneWeapon"
+                            alt="towerTwoLevelOneWeaponSprite sprite"
+                            src="sprites/tower/two/towerTwoLevelOneWeapon.png"
+                            ref={towerTwoLevelOneWeapon}
+                        />
+                        <img
+                            id="towerTwoLevelOneProjectile"
+                            alt="towerTwoLevelOneProjectileSprite sprite"
+                            src="sprites/tower/two/towerTwoLevelOneProjectile.png"
+                            ref={towerTwoLevelOneProjectile}
+                        />
+                        <img
+                            id="towerTwoLevelTwoWeapon"
+                            alt="towerTwoLevelTwoWeaponSprite sprite"
+                            src="sprites/tower/two/towerTwoLevelTwoWeapon.png"
+                            ref={towerTwoLevelTwoWeapon}
+                        />
+                        <img
+                            id="towerTwoLevelTwoProjectile"
+                            alt="towerTwoLevelTwoProjectileSprite sprite"
+                            src="sprites/tower/two/towerTwoLevelTwoProjectile.png"
+                            ref={towerTwoLevelTwoProjectile}
+                        />
+                        <img
+                            id="towerTwoLevelThreeWeapon"
+                            alt="towerTwoLevelThreeWeaponSprite sprite"
+                            src="sprites/tower/two/towerTwoLevelThreeWeapon.png"
+                            ref={towerTwoLevelThreeWeapon}
+                        />
+                        <img
+                            id="towerTwoLevelThreeProjectile"
+                            alt="towerTwoLevelThreeProjectileSprite sprite"
+                            src="sprites/tower/two/towerTwoLevelThreeProjectile.png"
+                            ref={towerTwoLevelThreeProjectile}
+                        />
+                    </div>
+                    <div className="b-tower-three-sprite">
+                        <img
+                            id="towerThree"
+                            alt="towerThreeSprite sprite"
+                            src="sprites/tower/three/towerThreeBase.png"
+                            ref={towerThreeBase}
+                        />
+                        <img
+                            id="towerThreeImpact"
+                            alt="towerThreeImpactSprite sprite"
+                            src="sprites/tower/three/towerThreeImpact.png"
+                            ref={towerThreeImpact}
+                        />
+                        <img
+                            id="towerThreeLevelOneWeapon"
+                            alt="towerThreeLevelOneWeaponSprite sprite"
+                            src="sprites/tower/three/towerThreeLevelOneWeapon.png"
+                            ref={towerThreeLevelOneWeapon}
+                        />
+                        <img
+                            id="towerThreeLevelOneProjectile"
+                            alt="towerThreeLevelOneProjectileSprite sprite"
+                            src="sprites/tower/three/towerThreeLevelOneProjectile.png"
+                            ref={towerThreeLevelOneProjectile}
+                        />
+                        <img
+                            id="towerThreeLevelTwoWeapon"
+                            alt="towerThreeLevelTwoWeaponSprite sprite"
+                            src="sprites/tower/three/towerThreeLevelTwoWeapon.png"
+                            ref={towerThreeLevelTwoWeapon}
+                        />
+                        <img
+                            id="towerThreeLevelTwoProjectile"
+                            alt="towerThreeLevelTwoProjectileSprite sprite"
+                            src="sprites/tower/three/towerThreeLevelTwoProjectile.png"
+                            ref={towerThreeLevelTwoProjectile}
+                        />
+                        <img
+                            id="towerThreeLevelThreeWeapon"
+                            alt="towerThreeLevelThreeWeaponSprite sprite"
+                            src="sprites/tower/three/towerThreeLevelThreeWeapon.png"
+                            ref={towerThreeLevelThreeWeapon}
+                        />
+                        <img
+                            id="towerThreeLevelThreeProjectile"
+                            alt="towerThreeLevelThreeProjectileSprite sprite"
+                            src="sprites/tower/three/towerThreeLevelThreeProjectile.png"
+                            ref={towerThreeLevelThreeProjectile}
+                        />
+                    </div>
+                    <div className="b-tower-four-sprite">
+                        <img
+                            id="towerFour"
+                            alt="towerFourSprite sprite"
+                            src="sprites/tower/four/towerFourBase.png"
+                            ref={towerFourBase}
+                        />
+                        <img
+                            id="towerFourImpact"
+                            alt="towerFourImpactSprite sprite"
+                            src="sprites/tower/four/towerFourImpact.png"
+                            ref={towerFourImpact}
+                        />
+                        <img
+                            id="towerFourLevelOneWeapon"
+                            alt="towerFourLevelOneWeaponSprite sprite"
+                            src="sprites/tower/four/towerFourLevelOneWeapon.png"
+                            ref={towerFourLevelOneWeapon}
+                        />
+                        <img
+                            id="towerFourLevelOneProjectile"
+                            alt="towerFourLevelOneProjectileSprite sprite"
+                            src="sprites/tower/four/towerFourLevelOneProjectile.png"
+                            ref={towerFourLevelOneProjectile}
+                        />
+                        <img
+                            id="towerFourLevelTwoWeapon"
+                            alt="towerFourLevelTwoWeaponSprite sprite"
+                            src="sprites/tower/four/towerFourLevelTwoWeapon.png"
+                            ref={towerFourLevelTwoWeapon}
+                        />
+                        <img
+                            id="towerFourLevelTwoProjectile"
+                            alt="towerFourLevelTwoProjectileSprite sprite"
+                            src="sprites/tower/four/towerFourLevelTwoProjectile.png"
+                            ref={towerFourLevelTwoProjectile}
+                        />
+                        <img
+                            id="towerFourLevelThreeWeapon"
+                            alt="towerFourLevelThreeWeaponSprite sprite"
+                            src="sprites/tower/four/towerFourLevelThreeWeapon.png"
+                            ref={towerFourLevelThreeWeapon}
+                        />
+                        <img
+                            id="towerFourLevelThreeProjectile"
+                            alt="towerFourLevelThreeProjectileSprite sprite"
+                            src="sprites/tower/four/towerFourLevelThreeProjectile.png"
+                            ref={towerFourLevelThreeProjectile}
                         />
                     </div>
                 </div>
@@ -604,6 +917,8 @@ export const Game: FC<IGameProps> = ({ engine = new TDEngine() }) => {
                         onClick={() => {
                             engine.isGameStarted = true;
                             setIsGameStarted(true);
+                            // game start play sound
+                            engine.sound?.soundArr?.gameStart?.play();
                         }}
                     >
                         Start
@@ -612,13 +927,15 @@ export const Game: FC<IGameProps> = ({ engine = new TDEngine() }) => {
                         onClick={() => {
                             engine.isGameStarted = false;
                             setIsGameStarted(false);
+                            // game start pause sound
+                            engine.sound?.soundArr?.gameStart?.pause();
                         }}
                     >
                         Pause
                     </button>
                     <button
                         onClick={() => {
-                            engine.restartGame();
+                            engine.gameRestart();
                             setIsGameStarted(!isGameStarted);
                         }}
                     >
@@ -648,34 +965,45 @@ export const Game: FC<IGameProps> = ({ engine = new TDEngine() }) => {
                 <div>
                     <button
                         disabled={
-                            !engine.isEnoughMoney(engine.towerOneParam!.towerParams.price)
+                            !engine.isEnoughMoney(
+                                engine.predefinedTowerParams.one!.towerParams.price,
+                            )
                         }
                         onClick={() => {
-                            engine.buildFirstTower();
+                            engine.buildTower("one", 0);
                         }}
                     >
-                        Build 1 level tower(${engine.towerOneParam!.towerParams.price})
+                        Build 1 level tower($
+                        {engine.predefinedTowerParams.one!.towerParams.price})
                     </button>
                     <button
                         disabled={
-                            !engine.isEnoughMoney(engine.towerTwoParam!.towerParams.price)
+                            !engine.isEnoughMoney(
+                                engine.predefinedTowerParams.one!.towerParams.price,
+                            )
                         }
                         onClick={() => {
-                            engine.buildSecondTower();
+                            engine.buildTower("one", 1);
                         }}
                     >
-                        Build 2 level tower(${engine.towerTwoParam!.towerParams.price})
+                        Build 2 level tower($
+                        {engine.predefinedTowerParams.one!.towerParams.price})
                     </button>
                     <button
                         disabled={
-                            !engine.isEnoughMoney(engine.towerThreeParam!.towerParams.price)
+                            !engine.isEnoughMoney(
+                                engine.predefinedTowerParams.one!.towerParams.price,
+                            )
                         }
                         onClick={() => {
-                            engine.buildThirdTower();
+                            engine.buildTower("one", 2);
                         }}
                     >
-                        Build 3 level tower(${engine.towerThreeParam!.towerParams.price})
+                        Build 3 level tower($
+                        {engine.predefinedTowerParams.one!.towerParams.price})
                     </button>
+                </div>
+                <div>
                 </div>
             </div>
         </section>
