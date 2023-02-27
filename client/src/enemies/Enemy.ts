@@ -1,12 +1,11 @@
-import TDEngine, { ITwoDCoordinates, TEnemyName } from "../engine/TDEngine";
+import TDEngine, { ITwoDCoordinates, TEnemyType } from "../engine/TDEngine";
 
-export type TEnemyType = "regular" | "slow" | "fast" | "boss" | "firebug";
 export interface IEnemy {
   engine: TDEngine;
   sprite?: Record<string, CanvasImageSource[]>[];
   spriteCanvas?: Record<string, HTMLCanvasElement[]>[];
   enemyParams: {
-    type?: TEnemyName;
+    type?: TEnemyType;
     width?: number;
     height?: number;
     spaceBetweenEnemies?: number;
@@ -28,34 +27,34 @@ export interface IEnemy {
 
 class Enemy {
   constructor(
-    public engine: IEnemy["engine"],
-    public enemyParams: IEnemy["enemyParams"] = {
-      type: "firebug",
-      width: 64,
-      height: 64,
-      spaceBetweenEnemies: 35,
-      speed: 0.65,
-      bounty: 5,
-      strokeStyle: "red",
-      rectCenterX: 0,
-      rectCenterY: 0,
-      hp: 100,
-      maxHp: 0,
-    },
-    public renderParams: IEnemy["renderParams"] = {
-      currentFrame: 0,
-      isAnimateDeath: false,
-      framesPerSprite: 8,
-    },
-    public currentStage: IEnemy["currentStage"] = 0,
-    public currentPosition: ITwoDCoordinates = {
-      x: 0,
-      y: 0,
-    },
-    public randomOffset = {
-      x: Math.floor(Math.random() * 10),
-      y: Math.floor(Math.random() * 15) + 1,
-    },
+      public engine: IEnemy["engine"],
+      public enemyParams: IEnemy["enemyParams"] = {
+        type: "firebug",
+        width: 64,
+        height: 64,
+        spaceBetweenEnemies: 35,
+        speed: 0.65,
+        bounty: 5,
+        strokeStyle: "red",
+        rectCenterX: 0,
+        rectCenterY: 0,
+        hp: 100,
+        maxHp: 0,
+      },
+      public renderParams: IEnemy["renderParams"] = {
+        currentFrame: 0,
+        isAnimateDeath: false,
+        framesPerSprite: 8,
+      },
+      public currentStage: IEnemy["currentStage"] = 0,
+      public currentPosition: ITwoDCoordinates = {
+        x: 0,
+        y: 0,
+      },
+      public randomOffset = {
+        x: Math.floor(Math.random() * 10),
+        y: Math.floor(Math.random() * 15) + 1,
+      },
   ) {
     this.enemyParams.rectCenterX = this.enemyParams?.width! / 2;
     this.enemyParams.rectCenterY = this.enemyParams?.height! / 2;
@@ -64,7 +63,7 @@ class Enemy {
   }
 
   public drawHpBar(
-    context: CanvasRenderingContext2D = this.engine.enemyContext!,
+      context: CanvasRenderingContext2D = this.engine.context!.hpBar!,
   ) {
     const hpLeft = this.enemyParams.hp / this.enemyParams.maxHp!;
     context.beginPath();
@@ -76,25 +75,32 @@ class Enemy {
       context.fillStyle = "red";
     }
     context.fillRect(
-      this.currentPosition.x,
-      this.currentPosition.y - 5,
-      this.enemyParams.width! * (this.enemyParams.hp / this.enemyParams.maxHp!),
-      4,
+        this.currentPosition.x,
+        this.currentPosition.y - 8,
+        this.enemyParams.width! * (this.enemyParams.hp / this.enemyParams.maxHp!),
+        8,
+    );
+    context.strokeStyle = "black";
+    context.strokeRect(
+        this.currentPosition.x,
+        this.currentPosition.y - 8,
+        this.enemyParams.width! * (this.enemyParams.hp / this.enemyParams.maxHp!),
+        8,
     );
     context.closePath();
   }
 
   public drawEnemyWithSprite(
-    enemySprite: CanvasImageSource,
-    context: CanvasRenderingContext2D = this.engine.enemyContext!,
+      enemySprite: CanvasImageSource,
+      context: CanvasRenderingContext2D = this.engine.context!.enemy!,
   ) {
     context.beginPath();
     context.drawImage(
-      enemySprite,
-      this.currentPosition.x,
-      this.currentPosition.y,
-      this.enemyParams.width!,
-      this.enemyParams.height!,
+        enemySprite,
+        this.currentPosition.x,
+        this.currentPosition.y,
+        this.enemyParams.width!,
+        this.enemyParams.height!,
     );
     context.closePath();
   }
@@ -120,27 +126,27 @@ class Enemy {
     // enemy is alive, draw movement animation
     if (!this.renderParams.isAnimateDeath) {
       this.drawEnemyWithSprite(
-        this.engine.enemySprites[this.enemyParams.type!]!.canvasArr![
-          this.engine.map?.stageArr.at(
-            this.currentStage !== this.engine.map?.stageArr?.length - 1
-              ? this.currentStage
-              : this.currentStage - 1,
-          )!.direction!
-        ]![this.getNextFrameIndex()],
-        context,
+          this.engine.enemySprites[this.enemyParams.type!]!.canvasArr![
+              this.engine.map?.stageArr.at(
+                  this.currentStage !== this.engine.map?.stageArr?.length - 1
+                      ? this.currentStage
+                      : this.currentStage - 1,
+              )!.direction!
+              ]![this.getNextFrameIndex()],
+          context,
       );
       // enemy is dead? draw death animation
     } else {
       this.drawEnemyWithSprite(
-        this.engine.enemySprites[this.enemyParams.type!]!.canvasArr![
-          `${this.engine.map?.stageArr.at(this.currentStage)!.direction!}Dead`
-        ]![
-          this.getNextFrameIndex(
-            this.engine.enemySprites[this.enemyParams.type!]
-              ?.deathFramesPerSprite,
-          )
-        ],
-        context,
+          this.engine.enemySprites[this.enemyParams.type!]!.canvasArr![
+              `${this.engine.map?.stageArr.at(this.currentStage)!.direction!}Dead`
+              ]![
+              this.getNextFrameIndex(
+                  this.engine.enemySprites[this.enemyParams.type!]
+                      ?.deathFramesPerSprite,
+              )
+              ],
+          context,
       );
     }
   }
@@ -148,13 +154,13 @@ class Enemy {
   public initialSetEnemy(initialPosition: ITwoDCoordinates = { x: 0, y: 0 }) {
     // set initial coords of enemy
     this.currentPosition.x =
-      this.engine.map?.stageArr.at(0)?.limit.x! +
-      // this.randomOffset.x +
-      initialPosition.x;
+        this.engine.map?.stageArr.at(0)?.limit.x! +
+        // this.randomOffset.x +
+        initialPosition.x;
     this.currentPosition.y =
-      this.engine.map?.stageArr.at(0)?.limit.y! +
-      // this.randomOffset.y +
-      initialPosition.y;
+        this.engine.map?.stageArr.at(0)?.limit.y! +
+        // this.randomOffset.y +
+        initialPosition.y;
   }
 
   public moveRight() {
@@ -192,8 +198,8 @@ class Enemy {
       }
       case "right": {
         if (
-          this.currentPosition.x <=
-          currentStage.limit.x - this.engine.map!.mapParams.gridStep // + this.randomOffset.x
+            this.currentPosition.x <=
+            currentStage.limit.x - this.engine.map!.mapParams.gridStep // + this.randomOffset.x
         ) {
           this.moveRight();
         } else {
@@ -205,7 +211,7 @@ class Enemy {
       }
       case "left": {
         if (
-          this.currentPosition.x >= currentStage.limit.x // + this.randomOffset.x
+            this.currentPosition.x >= currentStage.limit.x // + this.randomOffset.x
         ) {
           this.moveLeft();
         } else {
@@ -217,8 +223,8 @@ class Enemy {
       }
       case "down": {
         if (
-          this.currentPosition.y <=
-          currentStage.limit.y - this.engine.map!.mapParams.gridStep // + this.randomOffset.y
+            this.currentPosition.y <=
+            currentStage.limit.y - this.engine.map!.mapParams.gridStep // + this.randomOffset.y
         ) {
           this.moveDown();
         } else {
@@ -230,8 +236,8 @@ class Enemy {
       }
       case "up": {
         if (
-          this.currentPosition.y + this.engine.map!.mapParams.gridStep >=
-          currentStage.limit.y // + this.randomOffset.y
+            this.currentPosition.y + this.engine.map!.mapParams.gridStep >=
+            currentStage.limit.y // + this.randomOffset.y
         ) {
           this.moveUp();
         } else {
@@ -246,8 +252,8 @@ class Enemy {
         switch (prevStage.direction) {
           case "left": {
             if (
-              this.currentPosition.x + this.enemyParams.width! >=
-              currentStage.limit.x // + this.randomOffset.x
+                this.currentPosition.x + this.enemyParams.width! >=
+                currentStage.limit.x // + this.randomOffset.x
             ) {
               this.moveLeft();
             } else {
@@ -260,8 +266,8 @@ class Enemy {
           }
           case "right": {
             if (
-              this.currentPosition.x - this.enemyParams.width! * 2 >=
-              currentStage.limit.x // + this.randomOffset.x
+                this.currentPosition.x - this.enemyParams.width! * 2 >=
+                currentStage.limit.x // + this.randomOffset.x
             ) {
               this.moveRight();
             } else {
@@ -274,8 +280,8 @@ class Enemy {
           }
           case "down": {
             if (
-              this.currentPosition.y + this.enemyParams.height! <=
-              currentStage.limit.y // + this.randomOffset.y
+                this.currentPosition.y + this.enemyParams.height! <=
+                currentStage.limit.y // + this.randomOffset.y
             ) {
               this.moveDown();
             } else {
@@ -288,8 +294,8 @@ class Enemy {
           }
           case "up": {
             if (
-              this.currentPosition.y - this.enemyParams.height! <=
-              currentStage.limit.y // + this.randomOffset.y
+                this.currentPosition.y - this.enemyParams.height! <=
+                currentStage.limit.y // + this.randomOffset.y
             ) {
               this.moveUp();
             } else {
@@ -308,7 +314,7 @@ class Enemy {
   public destroy(isPushDeadEnemy = true) {
     // pop en enemy
     this.engine.enemies = this.engine.enemies?.filter(
-      (enemy: Enemy) => this !== enemy,
+        (enemy: Enemy) => this !== enemy,
     );
 
     // push enemy to dead enemies

@@ -1,1011 +1,114 @@
 import { FC, PropsWithChildren, useEffect, useRef, useState } from "react";
-import TDEngine, { ITDEngine, IWaveGenerator } from "../engine/TDEngine";
-import Tower from "../towers/Tower";
-import Enemy from "../enemies/Enemy";
-import Map from "../maps/Map";
-import Projectile from "../projectiles/Projectile";
-
-// polyfill
-if (!window.requestIdleCallback) {
-    // @ts-ignore
-    window.requestIdleCallback = function (
-        callback: IdleRequestCallback,
-        options: Record<string, string | number> = {},
-    ): NodeJS.Timeout {
-        let relaxation = 1;
-        let timeout = options?.timeout || relaxation;
-        let start = performance.now();
-        return setTimeout(function () {
-            callback({
-                get didTimeout() {
-                    return options.timeout
-                        ? false
-                        : performance.now() - start - relaxation > timeout;
-                },
-                timeRemaining: function () {
-                    return Math.max(0, relaxation + (performance.now() - start));
-                },
-            });
-        }, relaxation);
-    };
-}
-if (!window.cancelIdleCallback) {
-    window.cancelIdleCallback = function (id) {
-        clearTimeout(id);
-    };
-}
+import TDEngine, { TEnemyType, TTowerSpriteTypes } from "../engine/TDEngine";
+import GameUi from "./GameUI/GameUI";
 
 export interface IGameProps extends PropsWithChildren {
     engine?: TDEngine;
-    lives?: number;
-    score?: number;
-    money?: number;
-    wave?: IWaveGenerator["waveParams"]["currentWave"];
-    isEnoughMoney?: boolean;
 }
 
 export const Game: FC<IGameProps> = ({ engine = new TDEngine() }) => {
-    // canvas ref
-    const canvas = useRef<HTMLCanvasElement>(null);
-    const projectileCanvas = useRef<HTMLCanvasElement>(null);
-    const buildCanvas = useRef<HTMLCanvasElement>(null);
-    const cannonCanvas = useRef<HTMLCanvasElement>(null);
-    const towerCanvas = useRef<HTMLCanvasElement>(null);
-    const mapCanvas = useRef<HTMLCanvasElement>(null);
-    const enemyCanvas = useRef<HTMLCanvasElement>(null);
-    const deadEnemyCanvas = useRef<HTMLCanvasElement>(null);
     // game window ref
     const gameWindow = useRef<HTMLDivElement>(null);
-    // tower sprites ref
-    // tower 1
-    const towerOneBase = useRef<HTMLImageElement>(null);
-    const towerOneImpact = useRef<HTMLImageElement>(null);
-    const towerOneLevelOneWeapon = useRef<HTMLImageElement>(null);
-    const towerOneLevelOneProjectile = useRef<HTMLImageElement>(null);
-    const towerOneLevelTwoWeapon = useRef<HTMLImageElement>(null);
-    const towerOneLevelTwoProjectile = useRef<HTMLImageElement>(null);
-    const towerOneLevelThreeWeapon = useRef<HTMLImageElement>(null);
-    const towerOneLevelThreeProjectile = useRef<HTMLImageElement>(null);
-    // tower 2
-    const towerTwoBase = useRef<HTMLImageElement>(null);
-    const towerTwoImpact = useRef<HTMLImageElement>(null);
-    const towerTwoLevelOneWeapon = useRef<HTMLImageElement>(null);
-    const towerTwoLevelOneProjectile = useRef<HTMLImageElement>(null);
-    const towerTwoLevelTwoWeapon = useRef<HTMLImageElement>(null);
-    const towerTwoLevelTwoProjectile = useRef<HTMLImageElement>(null);
-    const towerTwoLevelThreeWeapon = useRef<HTMLImageElement>(null);
-    const towerTwoLevelThreeProjectile = useRef<HTMLImageElement>(null);
-    // tower 3
-    const towerThreeBase = useRef<HTMLImageElement>(null);
-    const towerThreeImpact = useRef<HTMLImageElement>(null);
-    const towerThreeLevelOneWeapon = useRef<HTMLImageElement>(null);
-    const towerThreeLevelOneProjectile = useRef<HTMLImageElement>(null);
-    const towerThreeLevelTwoWeapon = useRef<HTMLImageElement>(null);
-    const towerThreeLevelTwoProjectile = useRef<HTMLImageElement>(null);
-    const towerThreeLevelThreeWeapon = useRef<HTMLImageElement>(null);
-    const towerThreeLevelThreeProjectile = useRef<HTMLImageElement>(null);
-    // tower 4
-    const towerFourBase = useRef<HTMLImageElement>(null);
-    const towerFourImpact = useRef<HTMLImageElement>(null);
-    const towerFourLevelOneWeapon = useRef<HTMLImageElement>(null);
-    const towerFourLevelOneProjectile = useRef<HTMLImageElement>(null);
-    const towerFourLevelTwoWeapon = useRef<HTMLImageElement>(null);
-    const towerFourLevelTwoProjectile = useRef<HTMLImageElement>(null);
-    const towerFourLevelThreeWeapon = useRef<HTMLImageElement>(null);
-    const towerFourLevelThreeProjectile = useRef<HTMLImageElement>(null);
-    // enemy sprites ref
-    const firebugSprite = useRef<HTMLImageElement>(null);
-    const leafbugSprite = useRef<HTMLImageElement>(null);
-    const firelocustSprite = useRef<HTMLImageElement>(null);
-    const firewaspSprite = useRef<HTMLImageElement>(null);
-
-    // game status params
-    const [lives, setLives] = useState<IGameProps["lives"]>(
-        engine.initialGameParams.lives,
-    );
-    const [score, setScore] = useState<IGameProps["score"]>(engine.score);
-    const [money, setMoney] = useState<IGameProps["money"]>(
-        engine.initialGameParams.money,
-    );
-    const [wave, setWave] = useState<IGameProps["wave"]>(
-        engine.waveGenerator?.waveParams.currentWave,
-    );
-    const [countdown, setCountdown] = useState(
-        engine.waveGenerator?.waveCountdown,
-    );
-    const [enemiesLeft, setEnemiesLeft] = useState<IGameProps["wave"]>(
-        engine.enemies?.length,
-    );
-    const [isGameOver, setIsGameOver] = useState<boolean>(false);
     const [isGameStarted, setIsGameStarted] = useState<boolean>(false);
 
-    const addEventListeners = () => {
-        // add canvas mousemove event listener
-        buildCanvas.current?.addEventListener(
-            "mousemove",
-            engine.canvasMouseMoveCallback,
-        );
-        // add canvas mouse click event listener
-        buildCanvas.current?.addEventListener("click", engine.canvasClickCallback);
-        // add escape hotkey to cancel building mode
-        gameWindow.current?.addEventListener("keydown", engine.gameWindowKeydown);
-    };
-
-    const removeEventListeners = () => {
-        // remove canvas mousemove event listener
-        buildCanvas.current?.removeEventListener(
-            "mousemove",
-            engine.canvasMouseMoveCallback,
-        );
-        // remove canvas mouse click event listener
-        buildCanvas.current?.removeEventListener(
-            "click",
-            engine.canvasClickCallback,
-        );
-        // remove escape hotkey to cancel building mode
-        gameWindow.current?.removeEventListener(
-            "keydown",
-            engine.gameWindowKeydown,
-        );
-    };
-
-    const gameLoop = () => {
-        setTimeout(() => {
-            if (engine.isGameStarted) {
-                if (engine.lives > 0) {
-                    engine.clearCanvas();
-
-                    // draw level map
-                    // engine.map?.drawMap();
-
-                    // draw map grid
-                    // if (engine.isShowGrid) {
-                    //  engine.map?.drawGrid();
-                    // }
-
-                    // build mode
-                    if (engine.isCanBuild) {
-                        if (engine.draftTower) {
-                            engine.draftTower.drawDraft();
-                        }
-                    }
-
-                    // draw enemies
-                    if (engine.enemies?.length) {
-                        engine.enemies?.forEach((enemy: Enemy) => {
-                            if (enemy.renderParams.isAnimateDeath) return;
-                            if (
-                                enemy.currentPosition.x +
-                                enemy.enemyParams.width! +
-                                enemy.randomOffset.x <
-                                0
-                            )
-                                return;
-                            enemy.draw(engine.enemyContext!, true);
-                        });
-                    }
-
-                    // draw dead enemies
-                    if (engine.deadEnemies?.length) {
-                        engine.deadEnemies?.forEach((deadEnemy: Enemy) => {
-                            deadEnemy.draw(engine.deadEnemyContext!, false);
-                        });
-                    }
-
-                    // draw projectiles
-                    if (engine.projectiles?.length) {
-                        engine.projectiles?.forEach((projectile: Projectile) => {
-                            projectile.draw();
-                        });
-                    }
-
-                    // draw tower cannons
-                    engine.towers?.forEach((tower: Tower) => {
-                        tower.drawCannon(engine.cannonContext!);
-                    });
-
-                    // highlight the closest map tile to the cursor
-                    // engine.highlightTile(engine.map!.mapParams.closestTile);
-                    //
-                } else {
-                    // GAME IS OVER!
-                }
-
-                // request animation frame
-                engine.animationFrameId = requestAnimationFrame(gameLoop);
-            } else {
-                // cancel browser idle callback fn
-                cancelAnimationFrame(engine.animationFrameId);
-            }
-        }, 1000 / engine.initialGameParams.fps);
-    };
-
-    const gameLoopLogic = () => {
-        if (engine.lives > 0) {
-            if (engine.isGameStarted) {
-                // update game results
-                setScore(engine.score);
-                setCountdown(engine.waveGenerator?.waveCountdown);
-                setLives(engine.lives);
-                setMoney(engine.money);
-                setWave(engine.waveGenerator?.waveParams.currentWave);
-                setEnemiesLeft(engine.enemies?.length);
-                if (isGameOver) {
-                    setIsGameOver(false);
-                    engine.sound?.soundArr?.gameStart?.pause();
-                    engine.sound!.soundArr.gameStart!.currentTime = 0;
-                }
-
-                // enemy init || move
-                if (!engine.waveGenerator?.isInitialized) {
-                    if (!engine.waveGenerator?.waveTimerBetweenWaves) {
-                        // UI countdown between waves
-                        engine.waveGenerator?.countdown();
-                        engine.waveGenerator!.waveTimerBetweenWaves = setTimeout(() => {
-                            engine.waveGenerator?.init();
-                        }, engine.waveGenerator?.waveTimeoutBetweenWaves);
-                    }
-                } else {
-                    // isWaveInProgress?
-                    if (
-                        engine.enemies?.length === 0 &&
-                        engine.waveGenerator?.waveParams.isWaveInProgress
-                    ) {
-                        engine.waveGenerator.waveParams.isWaveInProgress = false;
-                        engine.waveGenerator!.waveCountdown! = Math.floor(
-                            engine.waveGenerator!.waveTimeoutBetweenWaves / 1000,
-                        );
-                        if (!engine.waveGenerator.waveTimerBetweenWaves) {
-                            // UI countdown between waves
-                            engine.waveGenerator.waveCountdownTimer = setInterval(() => {
-                                if (engine.waveGenerator!.waveCountdown > 0) {
-                                    engine.waveGenerator!.waveCountdown -= 1;
-                                } else {
-                                    clearInterval(engine.waveGenerator?.waveCountdownTimer!);
-                                    engine.waveGenerator!.isUICountdown = false;
-                                }
-                            }, 1000);
-                            engine.waveGenerator!.waveTimerBetweenWaves = setTimeout(() => {
-                                engine.clearMemory();
-                                engine.waveGenerator?.spawnEnemies();
-                            }, engine.waveGenerator.waveTimeoutBetweenWaves);
-                        }
-                    }
-                }
-
-                // search n destroy
-                if (engine.enemies?.length) {
-                    engine.towers?.forEach((tower: Tower) => {
-                        if (tower.target) {
-                            if (tower.isEnemyInRange(tower.target)) {
-                                tower.findTargetAngle();
-                                tower.fire();
-                            } else {
-                                tower.findTarget();
-                            }
-                        } else {
-                            tower.findTarget();
-                        }
-                    });
-                } else {
-                    // dirty hack
-                    engine.towers?.forEach((tower: Tower) => {
-                        tower.renderParams.isCannonAnimate = false;
-                    });
-                }
-
-                // move enemies
-                engine.enemies?.forEach((enemy: Enemy) => {
-                    enemy.move();
-                });
-
-                // move projectiles
-                if (engine.projectiles?.length) {
-                    engine.projectiles?.forEach((projectile: Projectile) => {
-                        projectile.move();
-                    });
-                }
-
-                // request callback when browser is idling
-                engine.requestIdleCallback = requestIdleCallback(gameLoopLogic, {
-                    timeout: 1000 / engine.initialGameParams.fps,
-                    // timeout: engine.idleTimeout,
-                });
-            } else {
-                cancelIdleCallback(engine.requestIdleCallback);
-            }
-        } else {
-            // game is over!
-            engine.isGameStarted = false;
-            setIsGameOver(true);
-        }
-    };
-
     useEffect(() => {
-        /* /DRAW BETWEEN ROUTES */
-        if (!engine.context) {
-            engine.setContext(canvas.current?.getContext("2d")!);
-            engine.setBuildContext(buildCanvas.current?.getContext("2d")!);
-            engine.setProjectileContext(projectileCanvas.current?.getContext("2d")!);
-            engine.setCannonContext(cannonCanvas.current?.getContext("2d")!);
-            engine.setTowerContext(towerCanvas.current?.getContext("2d")!);
-            engine.setMapContext(mapCanvas.current?.getContext("2d")!);
-            engine.setEnemyContext(enemyCanvas.current?.getContext("2d")!);
-            engine.setDeadEnemyContext(deadEnemyCanvas.current?.getContext("2d")!);
+        // engine init
+        if (!engine.isInitialized) {
+            engine.init(gameWindow.current!);
+            engine.map?.drawMap();
         }
 
-        if (!engine.map) {
-            // set new map
-            engine.map = new Map(engine);
-        }
+        /* /DRAW BETWEEN ROUTES */
+        /*
         // init level map draw
         engine.map?.drawMap();
 
         // draw towers
         if (engine.towers?.length) {
-            engine.towers.forEach((tower) => {
-                tower.draw();
-            });
+          engine.towers.forEach((tower) => {
+            tower.draw();
+          });
         }
 
         // draw enemies
         if (engine.enemies?.length) {
-            engine.enemies?.forEach((enemy: Enemy) => {
-                if (enemy.renderParams.isAnimateDeath) return;
-                if (
-                    enemy.currentPosition.x +
-                    enemy.enemyParams.width! +
-                    enemy.randomOffset.x <
-                    0
-                )
-                    return;
-                enemy.draw(engine.enemyContext!, true);
-            });
+          engine.enemies?.forEach((enemy: Enemy) => {
+            if (enemy.renderParams.isAnimateDeath) return;
+            if (
+              enemy.currentPosition.x +
+                enemy.enemyParams.width! +
+                enemy.randomOffset.x <
+              0
+            )
+              return;
+            enemy.draw(engine.context!.enemy!, true);
+          });
         }
 
         // draw dead enemies
         if (engine.deadEnemies?.length) {
-            engine.deadEnemies?.forEach((deadEnemy: Enemy) => {
-                deadEnemy.draw(engine.deadEnemyContext!, false);
-            });
+          engine.deadEnemies?.forEach((deadEnemy: Enemy) => {
+            deadEnemy.draw(engine.context!.deadEnemy!, false);
+          });
         }
 
         // draw projectiles
         if (engine.projectiles?.length) {
-            engine.projectiles?.forEach((projectile: Projectile) => {
-                projectile.draw();
-            });
+          engine.projectiles?.forEach((projectile: Projectile) => {
+            projectile.draw();
+          });
         }
         /* /DRAW BETWEEN ROUTES */
 
-        /* BUILD MODE */
-        addEventListeners();
-        /* /BUILD MODE */
-
         /* LOAD SPRITES */
-        if (!Object.keys(engine.towerSprites).length) {
-            // tower sprites
-            engine.towerSprites = {
-                one: {
-                    spriteSource: {
-                        base: towerOneBase.current!,
-                        impact: [
-                            towerOneImpact.current!,
-                            towerOneImpact.current!,
-                            towerOneImpact.current!,
-                        ],
-                        weapon: [
-                            towerOneLevelOneWeapon.current!,
-                            towerOneLevelTwoWeapon.current!,
-                            towerOneLevelThreeWeapon.current!,
-                        ],
-                        projectile: [
-                            towerOneLevelOneProjectile.current!,
-                            towerOneLevelTwoProjectile.current!,
-                            towerOneLevelThreeProjectile.current!,
-                        ],
-                    },
-                    canvasArr: null,
-                    canvasContextArr: null,
-                },
-                two: {
-                    spriteSource: {
-                        base: towerTwoBase.current!,
-                        impact: [
-                            towerTwoImpact.current!,
-                            towerTwoImpact.current!,
-                            towerTwoImpact.current!,
-                        ],
-                        weapon: [
-                            towerTwoLevelOneWeapon.current!,
-                            towerTwoLevelTwoWeapon.current!,
-                            towerTwoLevelThreeWeapon.current!,
-                        ],
-                        projectile: [
-                            towerTwoLevelOneProjectile.current!,
-                            towerTwoLevelTwoProjectile.current!,
-                            towerTwoLevelThreeProjectile.current!,
-                        ],
-                    },
-                    canvasArr: null,
-                    canvasContextArr: null,
-                },
-                three: {
-                    spriteSource: {
-                        base: towerThreeBase.current!,
-                        impact: [
-                            towerThreeImpact.current!,
-                            towerThreeImpact.current!,
-                            towerThreeImpact.current!,
-                        ],
-                        weapon: [
-                            towerThreeLevelOneWeapon.current!,
-                            towerThreeLevelTwoWeapon.current!,
-                            towerThreeLevelThreeWeapon.current!,
-                        ],
-                        projectile: [
-                            towerThreeLevelOneProjectile.current!,
-                            towerThreeLevelTwoProjectile.current!,
-                            towerThreeLevelThreeProjectile.current!,
-                        ],
-                    },
-                    canvasArr: null,
-                    canvasContextArr: null,
-                },
-                four: {
-                    spriteSource: {
-                        base: towerFourBase.current!,
-                        impact: [
-                            towerFourImpact.current!,
-                            towerFourImpact.current!,
-                            towerFourImpact.current!,
-                        ],
-                        weapon: [
-                            towerFourLevelOneWeapon.current!,
-                            towerFourLevelTwoWeapon.current!,
-                            towerFourLevelThreeWeapon.current!,
-                        ],
-                        projectile: [
-                            towerFourLevelOneProjectile.current!,
-                            towerFourLevelTwoProjectile.current!,
-                            towerFourLevelThreeProjectile.current!,
-                        ],
-                    },
-                    canvasArr: null,
-                    canvasContextArr: null,
-                },
-            };
-
-            engine.splitTowerSprite("one");
-            engine.splitTowerSprite("two");
-            engine.splitTowerSprite("three");
-            engine.splitTowerSprite("four");
-
+        // enemy sprites
+        if (!engine.isEnemySpritesLoaded!) {
+            for (const [enemyType, index] of Object.entries(engine.enemySprites)) {
+                engine.splitEnemySprite(enemyType as TEnemyType);
+            }
+            engine.isEnemySpritesLoaded = true;
+        }
+        // tower sprites
+        if (!engine.isTowerSpritesLoaded) {
+            for (const [towerType, index] of Object.entries(engine.towerSprites)) {
+                engine.splitTowerSprite(towerType as TTowerSpriteTypes);
+            }
+            engine.isTowerSpritesLoaded = true;
             // debug
             console.log(`engine`);
             console.log(engine);
             //
         }
-
-        if (!Object.keys(engine.enemySprites!).length) {
-            // enemy sprites
-            engine.enemySprites = {
-                firebug: {
-                    spriteSource: firebugSprite.current,
-                    canvasArr: null,
-                    canvasContextArr: null,
-                    spriteEdgeOffset: 0,
-                    spriteBetweenOffset: 0,
-                    spriteRightRow: 5,
-                    spriteLeftRow: 6,
-                    spriteUpRow: 4,
-                    spriteDownRow: 3,
-                    framesPerSprite: 8,
-                    deathFramesPerSprite: 11,
-                },
-                leafbug: {
-                    spriteSource: leafbugSprite.current,
-                    canvasArr: null,
-                    canvasContextArr: null,
-                    spriteEdgeOffset: 0,
-                    spriteBetweenOffset: 0,
-                    spriteRightRow: 5,
-                    spriteLeftRow: 6,
-                    spriteUpRow: 3,
-                    spriteDownRow: 4,
-                    framesPerSprite: 8,
-                    deathFramesPerSprite: 8,
-                },
-                firelocust: {
-                    spriteSource: firelocustSprite.current,
-                    canvasArr: null,
-                    canvasContextArr: null,
-                    spriteEdgeOffset: 0,
-                    spriteBetweenOffset: 0,
-                    spriteRightRow: 6,
-                    spriteLeftRow: 7,
-                    spriteUpRow: 5,
-                    spriteDownRow: 4,
-                    framesPerSprite: 12,
-                    deathFramesPerSprite: 14,
-                },
-                firewasp: {
-                    spriteSource: firewaspSprite.current,
-                    canvasArr: null,
-                    canvasContextArr: null,
-                    spriteEdgeOffset: 0,
-                    spriteBetweenOffset: 0,
-                    spriteRightRow: 6,
-                    spriteLeftRow: 7,
-                    spriteUpRow: 7,
-                    spriteDownRow: 7,
-                    framesPerSprite: 8,
-                    deathFramesPerSprite: 11,
-                },
-            };
-
-            engine.splitEnemySprite("firebug");
-            engine.splitEnemySprite("leafbug");
-            engine.splitEnemySprite("firelocust");
-            engine.splitEnemySprite("firewasp");
-        }
         /* /LOAD SPRITES */
 
         // game start
         if (engine.isGameStarted) {
-            gameLoop();
-            gameLoopLogic();
+            engine.gameLoop();
+            engine.gameLoopLogic();
+            // add event listeners
+            engine.addEventListeners();
         } else {
-            cancelAnimationFrame(engine.animationFrameId);
-            cancelIdleCallback(engine.requestIdleCallback);
+            engine.stopGame();
+            // remove event listeners
+            engine.removeEventListeners();
         }
-
         // componentWillUnmount
         return () => {
-            removeEventListeners();
             // pause teh game
-            cancelAnimationFrame(engine.animationFrameId);
-            cancelIdleCallback(engine.requestIdleCallback);
+            engine.stopGame();
+            // remove event listeners
+            engine.removeEventListeners();
         };
     }, [isGameStarted]);
 
     return (
-        <section className="b-game" ref={gameWindow}>
-            <div
-                className="b-canvas-wrapper"
-                style={{
-                    position: "relative",
-                    width: engine.map?.mapParams.width,
-                    height: engine.map?.mapParams.height,
-                }}
-            >
-                <canvas
-                    ref={buildCanvas}
-                    className="b-build-canvas"
-                    id="buildCanvas"
-                    width={engine.map?.mapParams.width}
-                    height={engine.map?.mapParams.height}
-                    style={{
-                        position: "absolute",
-                        zIndex: 999999,
-                        opacity: 0.4,
-                    }}
-                    tabIndex={1}
-                />
-                <canvas
-                    ref={projectileCanvas}
-                    className="b-projectile-canvas"
-                    id="projectileCanvas"
-                    width={engine.map?.mapParams.width}
-                    height={engine.map?.mapParams.height}
-                    style={{
-                        position: "absolute",
-                        zIndex: 99999,
-                        border: "1px solid black",
-                    }}
-                />
-                <canvas
-                    ref={canvas}
-                    className="b-game-canvas"
-                    id="gameCanvas"
-                    width={engine.map?.mapParams.width}
-                    height={engine.map?.mapParams.height}
-                    style={{
-                        position: "absolute",
-                        zIndex: 99999,
-                        border: "1px solid black",
-                    }}
-                />
-                <canvas
-                    ref={cannonCanvas}
-                    className="b-cannon-canvas"
-                    id="cannonCanvas"
-                    width={engine.map?.mapParams.width}
-                    height={engine.map?.mapParams.height}
-                    style={{
-                        position: "absolute",
-                        zIndex: 9999,
-                    }}
-                />
-                <canvas
-                    ref={towerCanvas}
-                    className="b-tower-canvas"
-                    id="towerCanvas"
-                    width={engine.map?.mapParams.width}
-                    height={engine.map?.mapParams.height}
-                    style={{ position: "absolute", zIndex: 999 }}
-                />
-                <canvas
-                    ref={enemyCanvas}
-                    className="b-enemy-canvas"
-                    id="enemyCanvas"
-                    width={engine.map?.mapParams.width}
-                    height={engine.map?.mapParams.height}
-                    style={{ position: "absolute", zIndex: 99 }}
-                />
-                <canvas
-                    ref={deadEnemyCanvas}
-                    className="b-dead-enemy-canvas"
-                    id="deadEnemyCanvas"
-                    width={engine.map?.mapParams.width}
-                    height={engine.map?.mapParams.height}
-                    style={{ position: "absolute", zIndex: 91 }}
-                />
-                <canvas
-                    ref={mapCanvas}
-                    className="b-map-canvas"
-                    id="mapCanvas"
-                    width={engine.map?.mapParams.width}
-                    height={engine.map?.mapParams.height}
-                    style={{
-                        position: "absolute",
-                        zIndex: 9,
-                        background: "url('/sprites/map/grass.png') repeat",
-                    }}
-                />
-            </div>
-            <div className="b-game-sprites">
-                <div className="b-tower-sprite" style={{ display: "none" }}>
-                    <div className="b-tower-one-sprite">
-                        <img
-                            id="towerOneBase"
-                            alt="towerOneSprite sprite"
-                            src="sprites/tower/one/towerOneBase.png"
-                            ref={towerOneBase}
-                        />
-                        <img
-                            id="towerOneImpact"
-                            alt="towerOneImpactSprite sprite"
-                            src="sprites/tower/one/towerOneImpact.png"
-                            ref={towerOneImpact}
-                        />
-                        <img
-                            id="towerOneLevelOneWeapon"
-                            alt="towerOneLevelOneWeaponSprite sprite"
-                            src="sprites/tower/one/towerOneLevelOneWeapon.png"
-                            ref={towerOneLevelOneWeapon}
-                        />
-                        <img
-                            id="towerOneLevelOneProjectile"
-                            alt="towerOneLevelOneProjectileSprite sprite"
-                            src="sprites/tower/one/towerOneLevelOneProjectile.png"
-                            ref={towerOneLevelOneProjectile}
-                        />
-                        <img
-                            id="towerOneLevelTwoWeapon"
-                            alt="towerOneLevelTwoWeaponSprite sprite"
-                            src="sprites/tower/one/towerOneLevelTwoWeapon.png"
-                            ref={towerOneLevelTwoWeapon}
-                        />
-                        <img
-                            id="towerOneLevelTwoProjectile"
-                            alt="towerOneLevelTwoProjectileSprite sprite"
-                            src="sprites/tower/one/towerOneLevelTwoProjectile.png"
-                            ref={towerOneLevelTwoProjectile}
-                        />
-                        <img
-                            id="towerOneLevelThreeWeapon"
-                            alt="towerOneLevelThreeWeaponSprite sprite"
-                            src="sprites/tower/one/towerOneLevelThreeWeapon.png"
-                            ref={towerOneLevelThreeWeapon}
-                        />
-                        <img
-                            id="towerOneLevelThreeProjectile"
-                            alt="towerOneLevelThreeProjectileSprite sprite"
-                            src="sprites/tower/one/towerOneLevelThreeProjectile.png"
-                            ref={towerOneLevelThreeProjectile}
-                        />
-                    </div>
-                    <div className="b-tower-two-sprite">
-                        <img
-                            id="towerTwo"
-                            alt="towerTwoSprite sprite"
-                            src="sprites/tower/two/towerTwoBase.png"
-                            ref={towerTwoBase}
-                        />
-                        <img
-                            id="towerTwoImpact"
-                            alt="towerTwoImpactSprite sprite"
-                            src="sprites/tower/two/towerTwoImpact.png"
-                            ref={towerTwoImpact}
-                        />
-                        <img
-                            id="towerTwoLevelOneWeapon"
-                            alt="towerTwoLevelOneWeaponSprite sprite"
-                            src="sprites/tower/two/towerTwoLevelOneWeapon.png"
-                            ref={towerTwoLevelOneWeapon}
-                        />
-                        <img
-                            id="towerTwoLevelOneProjectile"
-                            alt="towerTwoLevelOneProjectileSprite sprite"
-                            src="sprites/tower/two/towerTwoLevelOneProjectile.png"
-                            ref={towerTwoLevelOneProjectile}
-                        />
-                        <img
-                            id="towerTwoLevelTwoWeapon"
-                            alt="towerTwoLevelTwoWeaponSprite sprite"
-                            src="sprites/tower/two/towerTwoLevelTwoWeapon.png"
-                            ref={towerTwoLevelTwoWeapon}
-                        />
-                        <img
-                            id="towerTwoLevelTwoProjectile"
-                            alt="towerTwoLevelTwoProjectileSprite sprite"
-                            src="sprites/tower/two/towerTwoLevelTwoProjectile.png"
-                            ref={towerTwoLevelTwoProjectile}
-                        />
-                        <img
-                            id="towerTwoLevelThreeWeapon"
-                            alt="towerTwoLevelThreeWeaponSprite sprite"
-                            src="sprites/tower/two/towerTwoLevelThreeWeapon.png"
-                            ref={towerTwoLevelThreeWeapon}
-                        />
-                        <img
-                            id="towerTwoLevelThreeProjectile"
-                            alt="towerTwoLevelThreeProjectileSprite sprite"
-                            src="sprites/tower/two/towerTwoLevelThreeProjectile.png"
-                            ref={towerTwoLevelThreeProjectile}
-                        />
-                    </div>
-                    <div className="b-tower-three-sprite">
-                        <img
-                            id="towerThree"
-                            alt="towerThreeSprite sprite"
-                            src="sprites/tower/three/towerThreeBase.png"
-                            ref={towerThreeBase}
-                        />
-                        <img
-                            id="towerThreeImpact"
-                            alt="towerThreeImpactSprite sprite"
-                            src="sprites/tower/three/towerThreeImpact.png"
-                            ref={towerThreeImpact}
-                        />
-                        <img
-                            id="towerThreeLevelOneWeapon"
-                            alt="towerThreeLevelOneWeaponSprite sprite"
-                            src="sprites/tower/three/towerThreeLevelOneWeapon.png"
-                            ref={towerThreeLevelOneWeapon}
-                        />
-                        <img
-                            id="towerThreeLevelOneProjectile"
-                            alt="towerThreeLevelOneProjectileSprite sprite"
-                            src="sprites/tower/three/towerThreeLevelOneProjectile.png"
-                            ref={towerThreeLevelOneProjectile}
-                        />
-                        <img
-                            id="towerThreeLevelTwoWeapon"
-                            alt="towerThreeLevelTwoWeaponSprite sprite"
-                            src="sprites/tower/three/towerThreeLevelTwoWeapon.png"
-                            ref={towerThreeLevelTwoWeapon}
-                        />
-                        <img
-                            id="towerThreeLevelTwoProjectile"
-                            alt="towerThreeLevelTwoProjectileSprite sprite"
-                            src="sprites/tower/three/towerThreeLevelTwoProjectile.png"
-                            ref={towerThreeLevelTwoProjectile}
-                        />
-                        <img
-                            id="towerThreeLevelThreeWeapon"
-                            alt="towerThreeLevelThreeWeaponSprite sprite"
-                            src="sprites/tower/three/towerThreeLevelThreeWeapon.png"
-                            ref={towerThreeLevelThreeWeapon}
-                        />
-                        <img
-                            id="towerThreeLevelThreeProjectile"
-                            alt="towerThreeLevelThreeProjectileSprite sprite"
-                            src="sprites/tower/three/towerThreeLevelThreeProjectile.png"
-                            ref={towerThreeLevelThreeProjectile}
-                        />
-                    </div>
-                    <div className="b-tower-four-sprite">
-                        <img
-                            id="towerFour"
-                            alt="towerFourSprite sprite"
-                            src="sprites/tower/four/towerFourBase.png"
-                            ref={towerFourBase}
-                        />
-                        <img
-                            id="towerFourImpact"
-                            alt="towerFourImpactSprite sprite"
-                            src="sprites/tower/four/towerFourImpact.png"
-                            ref={towerFourImpact}
-                        />
-                        <img
-                            id="towerFourLevelOneWeapon"
-                            alt="towerFourLevelOneWeaponSprite sprite"
-                            src="sprites/tower/four/towerFourLevelOneWeapon.png"
-                            ref={towerFourLevelOneWeapon}
-                        />
-                        <img
-                            id="towerFourLevelOneProjectile"
-                            alt="towerFourLevelOneProjectileSprite sprite"
-                            src="sprites/tower/four/towerFourLevelOneProjectile.png"
-                            ref={towerFourLevelOneProjectile}
-                        />
-                        <img
-                            id="towerFourLevelTwoWeapon"
-                            alt="towerFourLevelTwoWeaponSprite sprite"
-                            src="sprites/tower/four/towerFourLevelTwoWeapon.png"
-                            ref={towerFourLevelTwoWeapon}
-                        />
-                        <img
-                            id="towerFourLevelTwoProjectile"
-                            alt="towerFourLevelTwoProjectileSprite sprite"
-                            src="sprites/tower/four/towerFourLevelTwoProjectile.png"
-                            ref={towerFourLevelTwoProjectile}
-                        />
-                        <img
-                            id="towerFourLevelThreeWeapon"
-                            alt="towerFourLevelThreeWeaponSprite sprite"
-                            src="sprites/tower/four/towerFourLevelThreeWeapon.png"
-                            ref={towerFourLevelThreeWeapon}
-                        />
-                        <img
-                            id="towerFourLevelThreeProjectile"
-                            alt="towerFourLevelThreeProjectileSprite sprite"
-                            src="sprites/tower/four/towerFourLevelThreeProjectile.png"
-                            ref={towerFourLevelThreeProjectile}
-                        />
-                    </div>
-                </div>
-                <div className="b-enemy-sprite" style={{ display: "none" }}>
-                    <img
-                        id="firebugSprite"
-                        alt="firebugSprite sprite"
-                        src="sprites/enemy/FirebugSprite.png"
-                        ref={firebugSprite}
-                    />
-                    <img
-                        id="leafbugSprite"
-                        alt="leafbugSprite sprite"
-                        src="sprites/enemy/LeafbugSprite.png"
-                        ref={leafbugSprite}
-                    />
-                    <img
-                        id="firelocustSprite"
-                        alt="firelocustSprite sprite"
-                        src="sprites/enemy/FirelocustSprite.png"
-                        ref={firelocustSprite}
-                    />
-                    <img
-                        id="firewaspSprite"
-                        alt="firewaspSprite sprite"
-                        src="sprites/enemy/FirewaspSprite.png"
-                        ref={firewaspSprite}
-                    />
-                </div>
-            </div>
-            <div className="b-game-status">
-                {isGameOver && <h1>GAME IS OVER!</h1>}
-                <div>
-                    <p>
-                        <span>{`Enemies left: ${enemiesLeft}`}</span>&nbsp;
-                        <span>{`Current wave: ${wave}`}</span>&nbsp;
-                        <span>{`Lives left: ${lives}`}</span>&nbsp;
-                        <span>{`Killed enemies: ${score}`}</span>&nbsp;
-                        <span>{`Money: $${money}`}</span>
-                        &nbsp;
-                    </p>
-                    <p>
-                        {Boolean(countdown) && (
-                            <span>{`Next wave in: ${countdown} seconds`}</span>
-                        )}
-                    </p>
-                </div>
-                <hr />
-                <div>
-                    <button
-                        onClick={() => {
-                            engine.isGameStarted = true;
-                            setIsGameStarted(true);
-                            // game start play sound
-                            engine.sound?.soundArr?.gameStart?.play();
-                        }}
-                    >
-                        Start
-                    </button>
-                    <button
-                        onClick={() => {
-                            engine.isGameStarted = false;
-                            setIsGameStarted(false);
-                            // game start pause sound
-                            engine.sound?.soundArr?.gameStart?.pause();
-                        }}
-                    >
-                        Pause
-                    </button>
-                    <button
-                        onClick={() => {
-                            engine.gameRestart();
-                            setIsGameStarted(!isGameStarted);
-                        }}
-                    >
-                        Restart
-                    </button>
-                    <button
-                        onClick={() => {
-                            canvas.current?.addEventListener(
-                                "mousemove",
-                                engine.canvasMouseMoveCallback,
-                            );
-                        }}
-                    >
-                        Enable mousemove callback
-                    </button>
-                    <button
-                        onClick={() => {
-                            canvas.current?.removeEventListener(
-                                "mousemove",
-                                engine.canvasMouseMoveCallback,
-                            );
-                        }}
-                    >
-                        Disable mousemove callback
-                    </button>
-                </div>
-                <div>
-                    <button
-                        disabled={
-                            !engine.isEnoughMoney(
-                                engine.predefinedTowerParams.one!.towerParams.price,
-                            )
-                        }
-                        onClick={() => {
-                            engine.buildTower("one", 0);
-                        }}
-                    >
-                        Build 1 level tower($
-                        {engine.predefinedTowerParams.one!.towerParams.price})
-                    </button>
-                    <button
-                        disabled={
-                            !engine.isEnoughMoney(
-                                engine.predefinedTowerParams.one!.towerParams.price,
-                            )
-                        }
-                        onClick={() => {
-                            engine.buildTower("one", 1);
-                        }}
-                    >
-                        Build 2 level tower($
-                        {engine.predefinedTowerParams.one!.towerParams.price})
-                    </button>
-                    <button
-                        disabled={
-                            !engine.isEnoughMoney(
-                                engine.predefinedTowerParams.one!.towerParams.price,
-                            )
-                        }
-                        onClick={() => {
-                            engine.buildTower("one", 2);
-                        }}
-                    >
-                        Build 3 level tower($
-                        {engine.predefinedTowerParams.one!.towerParams.price})
-                    </button>
-                </div>
-                <div>
-                </div>
-            </div>
-        </section>
+        <>
+            <section className="b-game-window" id="gameWindow" ref={gameWindow} />
+            <GameUi
+                engine={engine}
+                isGameStarted={isGameStarted}
+                setIsGameStarted={setIsGameStarted}
+            />
+        </>
     );
 };
