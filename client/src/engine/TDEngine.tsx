@@ -1079,7 +1079,7 @@ export class TDEngine {
         callback: IdleRequestCallback,
         options: Record<string, string | number> = {},
       ): NodeJS.Timeout {
-        let relaxation = 1000 / 24;
+        let relaxation = 1000 / 50;
         let timeout = options?.timeout || relaxation;
         let start = performance.now();
         return setTimeout(function () {
@@ -1093,7 +1093,7 @@ export class TDEngine {
               return Math.max(0, relaxation + (performance.now() - start));
             },
           });
-        }, Math.floor(timeout as number * 1.35));
+        }, relaxation);
       };
     }
     if (!window.cancelIdleCallback) {
