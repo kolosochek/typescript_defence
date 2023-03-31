@@ -68,7 +68,7 @@ export const GameMenu = ({ engine }: IGameMenu) => {
               setIsGameMenuOpen(false);
               setIsBuildMenuOpen(true);
             }}
-            disabled={isGameOver}
+            disabled={!isGameStarted && isGameOver}
           >
             {isGameStarted ? "Resume" : "Start"} game
           </MenuItem>
@@ -105,6 +105,7 @@ export const GameMenu = ({ engine }: IGameMenu) => {
               }
               setIsGameMenuOpen(false);
             }}
+            disabled={!isGameStarted}
           >
             {isSoundEnabled ? "Disable" : "Enable"} music
           </MenuItem>
