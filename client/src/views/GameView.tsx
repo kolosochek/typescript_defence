@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { CircularProgress, Box, createTheme, Grid } from "@mui/material";
 import { shallow } from "zustand/shallow";
 import { ThemeProvider } from "@mui/material/styles";
-import { TDEngine, TTowerTypes } from "../engine/TDEngine";
+import { TDEngine } from "../engine/TDEngine";
 import GameUi from "../components/GameUI/GameUI";
 import { useGameStore } from "../store";
 import { SideMenu } from "../components/SideMenu/SideMenu";

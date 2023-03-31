@@ -1093,7 +1093,7 @@ export class TDEngine {
               return Math.max(0, relaxation + (performance.now() - start));
             },
           });
-        }, relaxation);
+        }, Math.floor(timeout as number * 1.35));
       };
     }
     if (!window.cancelIdleCallback) {
