@@ -8,17 +8,17 @@ export interface ISound {
   soundSourceArr: TPartialRecord<TSoundType, string>;
   isInitialized: boolean;
 }
-class Sound {
+export class Sound {
   constructor(
-      public context: ISound["context"] = document.createElement("audio"),
-      public soundSourceArr: ISound["soundSourceArr"] = {
-        gameStart: "/sound/gameStart.mp3",
-      },
-      public soundArr: ISound["soundArr"] = {},
-      public isInitialized: ISound["isInitialized"] = false,
+    public context: ISound["context"] = document.createElement("audio"),
+    public soundSourceArr: ISound["soundSourceArr"] = {
+      gameStart: "/sound/gameStart.mp3",
+    },
+    public soundArr: ISound["soundArr"] = {},
+    public isInitialized: ISound["isInitialized"] = false,
   ) {
     for (const [soundType, soundSource] of Object.entries(
-        this.soundSourceArr,
+      this.soundSourceArr,
     )) {
       const soundSample = new Audio(soundSource);
       soundSample.oncanplay = () => {
@@ -30,6 +30,3 @@ class Sound {
     }
   }
 }
-
-export default Sound;
-
