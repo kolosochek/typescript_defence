@@ -1,15 +1,15 @@
 # Typescript defence
 ## https://typescriptdefence.netlify.app/
 ### Ultimate tower defence game engine
-![game screenshot](https://github.com/kolosochek/typescript_defence/tree/main/client/github/images/game_screenshot.png?raw=true)
+![game screenshot](https://raw.githubusercontent.com/kolosochek/typescript_defence/main/github/images/game_screenshot.png)
 Build and upgrade towers, cast spells to stop multiple wave monster hordes.
 Unique game experience, procedure generated map for each session, randomized game params.
 
 
-![gameplay_small](https://github.com/kolosochek/typescript_defence/tree/main/client/github/images/gameplay_small.gif?raw=true)
+![gameplay_small](https://raw.githubusercontent.com/kolosochek/typescript_defence/main/github/images/gameplay_small.gif)
 <details>
   <summary>More gameplay video</summary>
-![gameplay_video](https://github.com/kolosochek/typescript_defence/tree/main/client/github/images/gameplay_demo.gif?raw=true)
+![gameplay_video](https://raw.githubusercontent.com/kolosochek/typescript_defence/main/github/images/gameplay_demo.gif)
 </details>
 
 
