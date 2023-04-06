@@ -1,5 +1,7 @@
-import { create } from "zustand";
-import { ITDEngine, IWaveGenerator } from "../engine/TDEngine";
+import {ITDEngine} from "../engine/TDEngine";
+import {IWaveGenerator} from "../waveGenerator/waveGenerator";
+import {ITower} from "../towers/Tower";
+import {create} from "zustand";
 
 export interface IGameStore {
   isGameMenuOpen: ITDEngine["isGameMenuOpen"];
@@ -15,7 +17,8 @@ export interface IGameStore {
   enemiesLeft: ITDEngine["enemiesLeft"];
   countdown: IWaveGenerator["waveCountdown"];
   waveNumber: IWaveGenerator["waveParams"]["currentWave"];
-  constructionProgress: number;
+  waveType: IWaveGenerator["waveParams"]["waveType"];
+  constructionProgress: ITower["renderParams"]["constructionProgressPercent"];
 }
 export type TGameAction = {
   updateIsGameMenuOpen: (bool: IGameStore["isGameMenuOpen"]) => void;
@@ -32,28 +35,29 @@ export type TGameAction = {
   updateCountdown: (countdown: IGameStore["countdown"]) => void;
   updateWaveNumber: (waveNumber: IGameStore["waveNumber"]) => void;
   updateConstructionProgress: (
-    constructionProgress: IGameStore["constructionProgress"],
+      constructionProgress: IGameStore["constructionProgress"],
   ) => void;
+  updateWaveType: (waveType: IGameStore["waveType"]) => void;
 };
 
 export const useGameStore = create<IGameStore & TGameAction>()((set) => ({
   isGameMenuOpen: true,
   updateIsGameMenuOpen: (isGameMenuOpen) =>
-    set(() => ({ isGameMenuOpen: isGameMenuOpen })),
+      set(() => ({ isGameMenuOpen: isGameMenuOpen })),
   isBuildMenuOpen: true,
   updateIsBuildMenuOpen: (isBuildMenuOpen) =>
-    set(() => ({ isBuildMenuOpen: isBuildMenuOpen })),
+      set(() => ({ isBuildMenuOpen: isBuildMenuOpen })),
   isGameStarted: false,
   updateIsGameStarted: (isGameStarted) =>
-    set(() => ({ isGameStarted: isGameStarted })),
+      set(() => ({ isGameStarted: isGameStarted })),
   isSideMenuOpen: false,
   updateIsSideMenuOpen: (isSideMenuOpen) =>
-    set(() => ({ isSideMenuOpen: isSideMenuOpen })),
+      set(() => ({ isSideMenuOpen: isSideMenuOpen })),
   isGameOver: false,
   updateIsGameOver: (isGameOver) => set(() => ({ isGameOver: isGameOver })),
   selectedTower: null,
   updateSelectedTower: (selectedTower) =>
-    set(() => ({ selectedTower: selectedTower })),
+      set(() => ({ selectedTower: selectedTower })),
   lives: 0,
   updateLives: (lives) => set(() => ({ lives: lives })),
   mana: 100,
@@ -70,5 +74,7 @@ export const useGameStore = create<IGameStore & TGameAction>()((set) => ({
   updateWaveNumber: (waveNumber) => set(() => ({ waveNumber: waveNumber })),
   constructionProgress: 0,
   updateConstructionProgress: (constructionProgress) =>
-    set(() => ({ constructionProgress: constructionProgress })),
+      set(() => ({ constructionProgress: constructionProgress })),
+  waveType: "regular",
+  updateWaveType: (waveType) => set(() => ({ waveType: waveType })),
 }));

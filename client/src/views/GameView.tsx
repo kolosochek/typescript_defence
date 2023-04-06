@@ -3,11 +3,13 @@ import { CircularProgress, Box, createTheme, Grid } from "@mui/material";
 import { shallow } from "zustand/shallow";
 import { ThemeProvider } from "@mui/material/styles";
 import { TDEngine } from "../engine/TDEngine";
-import GameUi from "../components/GameUI/GameUI";
+import { GameUi } from "../components/GameUI/GameUI";
 import { useGameStore } from "../store";
 import { SideMenu } from "../components/SideMenu/SideMenu";
 import { BuildMenu } from "../components/BuildMenu/BuildMenu";
 import { GameMenu } from "../components/GameMenu/GameMenu";
+import { UiMessage } from "../components/UIMessage/UIMessage";
+
 
 // mui theme
 const theme = createTheme({
@@ -107,38 +109,41 @@ export const Game = ({ engine = new TDEngine() }: IGameProps) => {
 
     return (
         <ThemeProvider theme={theme}>
-            {isLoading && (
-                <Grid
-                    container
-                    justifyContent="center"
-                    alignItems="center"
-                    sx={{ w: "100%", h: "100%" }}
-                >
-                    <CircularProgress />
-                </Grid>
-            )}
-            <Box
+            <Grid
+                container
+                justifyContent="center"
+                alignItems="center"
                 sx={{
                     position: "relative",
-                    width: `${engine.map?.mapParams?.width}px`,
-                    height: `${engine.map?.mapParams?.height}px`,
                     "& .b-game-window": {
                         position: "absolute",
                         display: !isLoading ? "flex" : "none",
                     },
-                    overflow: "hidden",
+                    background: `url("${
+                        !isLoading ? engine.map?.grassBackrgroundCanvas?.toDataURL() : 0
+                    }") 0 0 repeat`,
                 }}
             >
+                {!isLoading && <GameUi engine={engine} />}
                 <Box className="b-game-window" id="gameWindow" ref={gameWindow} />
-                {!isLoading && (
-                    <>
-                        <GameUi engine={engine} />
+                {isLoading ? (
+                    <CircularProgress />
+                ) : (
+                    <Box
+                        sx={{
+                            position: "relative",
+                            width: `${engine.map?.mapParams?.width}px`,
+                            height: `${engine.map?.mapParams?.height}px`,
+                            overflow: "hidden",
+                        }}
+                    >
                         <SideMenu engine={engine} />
                         <BuildMenu engine={engine} />
                         <GameMenu engine={engine} />
-                    </>
+                        <UiMessage />
+                    </Box>
                 )}
-            </Box>
+            </Grid>
         </ThemeProvider>
     );
 };
