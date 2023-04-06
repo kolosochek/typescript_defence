@@ -9,6 +9,7 @@ Unique game experience, procedure generated map for each session, randomized gam
 ![gameplay_small](https://raw.githubusercontent.com/kolosochek/typescript_defence/main/github/images/gameplay_small.gif)
 <details>
   <summary>More gameplay video</summary>
+
 ![gameplay_video](https://raw.githubusercontent.com/kolosochek/typescript_defence/main/github/images/gameplay_demo.gif)
 </details>
 
