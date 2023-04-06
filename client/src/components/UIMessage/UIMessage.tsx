@@ -4,8 +4,7 @@ import { useGameStore } from "../../store";
 import {ColorDict} from "../../engine/TDEngine";
 
 
-export interface IUiMessage {}
-export const UiMessage = ({}: IUiMessage) => {
+export const UiMessage = () => {
   const waveType = useGameStore((state) => state.waveType, shallow);
   let waveTypeColor: string = ColorDict.fontColor;
   switch (waveType) {
