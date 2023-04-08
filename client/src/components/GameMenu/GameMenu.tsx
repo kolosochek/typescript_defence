@@ -25,8 +25,6 @@ export const GameMenu = ({ engine }: IGameMenu) => {
     shallow,
   );
   const isGameOver = useGameStore((state) => state.isGameOver, shallow);
-  const isFullscreen = useGameStore((state) => state.isFullscreen, shallow);
-  const setIsFullscreen = useGameStore((state) => state.updateIsFullscreen, shallow);
   const [isSoundEnabled, setIsSoundEnabled] = useState<boolean>(
     engine.isSoundEnabled,
   );
