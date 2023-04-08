@@ -120,22 +120,6 @@ export const GameMenu = ({ engine }: IGameMenu) => {
           >
             {isSoundEnabled ? "Disable" : "Enable"} music
           </MenuItem>
-            <MenuItem
-                onClick={() => {
-                    if (!document.fullscreen) {
-                        document.body.requestFullscreen();
-                        setIsFullscreen(true);
-                        setIsGameMenuOpen(false);
-                    } else {
-                        document.exitFullscreen();
-                        setIsFullscreen(false);
-                        setIsGameMenuOpen(false);
-                    }
-                }}
-                disabled={!isGameStarted}
-            >
-                Fullscreen {isFullscreen ? "off" : "on"}
-            </MenuItem>
         </MenuList>
       </Box>
     </Box>
