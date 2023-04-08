@@ -19,6 +19,7 @@ export interface IGameStore {
   waveNumber: IWaveGenerator["waveParams"]["currentWave"];
   waveType: IWaveGenerator["waveParams"]["waveType"];
   constructionProgress: ITower["renderParams"]["constructionProgressPercent"];
+  isFullscreen: boolean;
 }
 export type TGameAction = {
   updateIsGameMenuOpen: (bool: IGameStore["isGameMenuOpen"]) => void;
@@ -38,6 +39,7 @@ export type TGameAction = {
       constructionProgress: IGameStore["constructionProgress"],
   ) => void;
   updateWaveType: (waveType: IGameStore["waveType"]) => void;
+  updateIsFullscreen: (isFullscreen: IGameStore["isFullscreen"]) => void;
 };
 
 export const useGameStore = create<IGameStore & TGameAction>()((set) => ({
@@ -77,4 +79,7 @@ export const useGameStore = create<IGameStore & TGameAction>()((set) => ({
       set(() => ({ constructionProgress: constructionProgress })),
   waveType: "regular",
   updateWaveType: (waveType) => set(() => ({ waveType: waveType })),
+  isFullscreen: true,
+  updateIsFullscreen: (isFullscreen) =>
+      set(() => ({ isFullscreen: isFullscreen })),
 }));
