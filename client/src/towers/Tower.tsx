@@ -207,6 +207,12 @@ export class Tower {
           this.renderParams.constructingCurrentFrame = 0;
           this.renderParams.isConstructing = false;
           this.renderParams.isConstructionEnd = false;
+          // set attack interval
+          this.setAttackInterval();
+          // initial fire
+          this.isCanFire = true;
+          // clear build canvas
+          this.engine.clearContext(this.engine.context?.build!);
           // clear tower canvas
           this.engine.clearContext(this.engine.context?.tower!);
           this.engine.towers?.forEach((tower) => {
@@ -392,6 +398,7 @@ export class Tower {
             this.towerParams.constructionWidth,
             this.towerParams.constructionHeight,
         );
+        // draw progress
         this.drawConstructionProgress();
       }
       context.closePath();
@@ -449,7 +456,7 @@ export class Tower {
                 ].cannonHeight!,
         ),
     );
-    if (isShouldRotate) {
+    if (isShouldRotate && this.target) {
       const canvas = (
           this.engine.towerSprites[this.type]!.canvasArr?.weapon![
               this.upgradeLevel
@@ -534,8 +541,6 @@ export class Tower {
     if (this.attackIntervalTimer) return;
     // clear memory
     this.clearAttackInterval();
-    // initial fire
-    this.isCanFire = true;
     // then set attack interval
     this.attackIntervalTimer = setInterval(() => {
       this.isCanFire = true;
@@ -553,11 +558,11 @@ export class Tower {
     context.beginPath();
     context.lineWidth = 1;
     // context.setLineDash([10, 15]);
-    context.fillStyle = this.towerParams.strokeStyle;
+    context.fillStyle = ColorDict.towerRangeColor;
     // draw tower range
     context.arc(
         this.currentPosition.x - this.towerParams.baseWidth / 2,
-        this.currentPosition.y - this.towerParams.baseHeight / 2,
+        this.currentPosition.y - this.towerParams.baseWidth / 2,
         this.towerParams.attackRange,
         0,
         360,
@@ -573,13 +578,15 @@ export class Tower {
         (enemy.currentPosition.x + enemy.enemyParams.width! / 2);
     const yDistance =
         this.currentPosition.y -
-        this.towerParams.baseHeight / 2 -
+        this.towerParams.baseWidth / 2 -
         (enemy.currentPosition.y + enemy.enemyParams.height! / 2);
     if (Math.hypot(xDistance, yDistance) < this.towerParams.attackRange) {
       this.target = enemy;
+      /*
       if (!this.attackIntervalTimer && !this.renderParams.isConstructing) {
         this.setAttackInterval();
       }
+       */
       return true;
     }
     return false;
@@ -596,13 +603,15 @@ export class Tower {
                 this.towerParams.baseWidth / 2 -
                 enemy.currentPosition.x +
                 enemy.enemyParams.width! / 2,
-            ) <= this.towerParams.attackRange &&
+            ) <=
+            this.towerParams.attackRange * 1.2 &&
             Math.abs(
                 this.currentPosition.y -
-                this.towerParams.baseHeight / 2 -
+                this.towerParams.baseWidth / 2 -
                 enemy.currentPosition.y +
                 enemy.enemyParams.height! / 2,
-            ) <= this.towerParams.attackRange
+            ) <=
+            this.towerParams.attackRange * 1.2
         ) {
           return this.isEnemyInRange(enemy);
         }
@@ -637,10 +646,10 @@ export class Tower {
   }
 
   public fire() {
-    if (this.isCanFire && this.target) {
+    if (this.isCanFire && this.attackIntervalTimer) {
       this.renderParams.cannonCurrentFrame = 0;
       this.renderParams.isCannonAnimate = true;
-      this.engine.pushProjectile(
+      this.engine.projectiles?.push(
           new Projectile(
               this.target!,
               this,

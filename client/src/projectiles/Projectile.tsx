@@ -8,25 +8,25 @@ export interface IProjectile {
 
 export class Projectile {
   constructor(
-    public target: Enemy | null,
-    public tower: Tower,
-    public damage: ITower["towerParams"]["attackDamage"],
-    public currentPosition: ITwoDCoordinates = {
-      x: 0,
-      y: 0,
-    },
-    public distanceMoved = 0,
-    public renderParams = {
-      currentFrame: 0,
-      isAnimateImpact: false,
-    },
+      public target: Enemy | null,
+      public tower: Tower,
+      public damage: ITower["towerParams"]["attackDamage"],
+      public currentPosition: ITwoDCoordinates = {
+        x: 0,
+        y: 0,
+      },
+      public distanceMoved = 0,
+      public renderParams = {
+        currentFrame: 0,
+        isAnimateImpact: false,
+      },
   ) {
     this.tower.projectileParams.rectCenterX =
-      this.tower.projectileParams?.dimensions[this.tower.upgradeLevel]
-        .projectileWidth / 2;
+        this.tower.projectileParams?.dimensions[this.tower.upgradeLevel]
+            .projectileWidth / 2;
     this.tower.projectileParams.rectCenterY =
-      this.tower.projectileParams?.dimensions[this.tower.upgradeLevel]
-        .projectileHeight / 2;
+        this.tower.projectileParams?.dimensions[this.tower.upgradeLevel]
+            .projectileHeight / 2;
     this.currentPosition = {
       x: Math.floor(this.tower.towerParams.fireFromCoords!.x),
       y: Math.floor(this.tower.towerParams.fireFromCoords!.y),
@@ -34,7 +34,7 @@ export class Projectile {
   }
 
   public getNextFrameIndex(
-    limit: number = this.tower.projectileParams.projectileFrameLimit,
+      limit: number = this.tower.projectileParams.projectileFrameLimit,
   ) {
     if (this.renderParams.currentFrame < limit - 1) {
       this.renderParams.currentFrame += 1;
@@ -45,7 +45,7 @@ export class Projectile {
   }
 
   public getNextImpactFrameIndex(
-    limit: number = this.tower.projectileParams.impactFrameLimit,
+      limit: number = this.tower.projectileParams.impactFrameLimit,
   ) {
     if (this.renderParams.currentFrame < limit - 1) {
       this.renderParams.currentFrame += 1;
@@ -60,25 +60,25 @@ export class Projectile {
     this.tower.engine.context!.projectile!.beginPath();
     if (!this.renderParams.isAnimateImpact) {
       const canvas = (
-        this.tower.engine.towerSprites[this.tower.type]!.canvasArr?.projectile![
-          this.tower.upgradeLevel
-        ] as HTMLCanvasElement[]
+          this.tower.engine.towerSprites[this.tower.type]!.canvasArr?.projectile![
+              this.tower.upgradeLevel
+              ] as HTMLCanvasElement[]
       )[this.getNextFrameIndex()]!;
       // get current frame to rotate projectile image and draw it in main projectile context
       const context = (
-        this.tower.engine.towerSprites[this.tower.type]!.canvasContextArr
-          ?.projectile[this.tower.upgradeLevel]! as CanvasRenderingContext2D[]
+          this.tower.engine.towerSprites[this.tower.type]!.canvasContextArr
+              ?.projectile[this.tower.upgradeLevel]! as CanvasRenderingContext2D[]
       )[this.tower.projectileParams.projectileFrameLimit]!;
       // find rectangle diagonal
       const canvasHypot = Math.ceil(
-        Math.hypot(
-          this.tower.engine.predefinedTowerParams[this.tower.type]
-            ?.projectileParams?.dimensions[this.tower.upgradeLevel]
-            .projectileWidth!,
-          this.tower.engine.predefinedTowerParams[this.tower.type]
-            ?.projectileParams?.dimensions[this.tower.upgradeLevel]
-            .projectileHeight!,
-        ),
+          Math.hypot(
+              this.tower.engine.predefinedTowerParams[this.tower.type]
+                  ?.projectileParams?.dimensions[this.tower.upgradeLevel]
+                  .projectileWidth!,
+              this.tower.engine.predefinedTowerParams[this.tower.type]
+                  ?.projectileParams?.dimensions[this.tower.upgradeLevel]
+                  .projectileHeight!,
+          ),
       );
       // rotate frame
       context.save();
@@ -91,23 +91,23 @@ export class Projectile {
       context.restore();
       // and draw it
       this.tower.engine.context!.projectile!.drawImage(
-        (
-          this.tower.engine.towerSprites[this.tower.type]!.canvasArr
-            ?.projectile![this.tower.upgradeLevel] as HTMLCanvasElement[]
-        )[this.tower.projectileParams.projectileFrameLimit]!,
-        Math.ceil(this.currentPosition.x),
-        Math.ceil(this.currentPosition.y),
+          (
+              this.tower.engine.towerSprites[this.tower.type]!.canvasArr
+                  ?.projectile![this.tower.upgradeLevel] as HTMLCanvasElement[]
+          )[this.tower.projectileParams.projectileFrameLimit]!,
+          Math.ceil(this.currentPosition.x),
+          Math.ceil(this.currentPosition.y),
       );
     } else if (this.renderParams.isAnimateImpact) {
       // impact
       this.tower.engine.context!.projectile!.drawImage(
-        (
-          this.tower.engine.towerSprites[this.tower.type]!.canvasArr?.impact![
-            this.tower.upgradeLevel
-          ] as HTMLCanvasElement[]
-        )[this.getNextImpactFrameIndex()]! as HTMLCanvasElement,
-        Math.ceil(this.currentPosition.x),
-        Math.ceil(this.currentPosition.y),
+          (
+              this.tower.engine.towerSprites[this.tower.type]!.canvasArr?.impact![
+                  this.tower.upgradeLevel
+                  ] as HTMLCanvasElement[]
+          )[this.getNextImpactFrameIndex()]! as HTMLCanvasElement,
+          Math.ceil(this.currentPosition.x),
+          Math.ceil(this.currentPosition.y),
       );
     }
     this.tower.engine.context!.projectile!.closePath();
@@ -129,17 +129,17 @@ export class Projectile {
     }
     // find unit vector
     const xDistance =
-      this.target.currentPosition.x +
-      this.target.enemyParams.rectCenterX! -
-      this.currentPosition.x -
-      this.tower.projectileParams.dimensions[this.tower.upgradeLevel]
-        .projectileWidth;
+        this.target.currentPosition.x +
+        this.target.enemyParams.rectCenterX! -
+        this.currentPosition.x -
+        this.tower.projectileParams.dimensions[this.tower.upgradeLevel]
+            .projectileWidth;
     const yDistance =
-      this.target.currentPosition.y +
-      this.target.enemyParams.rectCenterY! -
-      this.currentPosition.y -
-      this.tower.projectileParams.dimensions[this.tower.upgradeLevel]
-        .projectileHeight;
+        this.target.currentPosition.y +
+        this.target.enemyParams.rectCenterY! -
+        this.currentPosition.y -
+        this.tower.projectileParams.dimensions[this.tower.upgradeLevel]
+            .projectileHeight;
     const distanceToTarget = Math.hypot(xDistance, yDistance);
 
     if (distanceToTarget < this.distanceMoved) {
@@ -147,11 +147,11 @@ export class Projectile {
       this.collision();
     } else {
       this.currentPosition.x = Math.floor(
-        this.currentPosition.x +
+          this.currentPosition.x +
           (this.distanceMoved * xDistance) / distanceToTarget,
       );
       this.currentPosition.y = Math.floor(
-        this.currentPosition.y +
+          this.currentPosition.y +
           (this.distanceMoved * yDistance) / distanceToTarget,
       );
     }
@@ -159,20 +159,20 @@ export class Projectile {
 
   public isEnemyInSplashRange(enemy: Enemy) {
     const xDistance =
-      this.currentPosition.x -
-      this.tower.projectileParams.dimensions[this.tower.upgradeLevel]
-        .projectileWidth /
+        this.currentPosition.x -
+        this.tower.projectileParams.dimensions[this.tower.upgradeLevel]
+            .projectileWidth /
         2 -
-      (enemy.currentPosition.x + enemy.enemyParams.width! / 2);
+        (enemy.currentPosition.x + enemy.enemyParams.width! / 2);
     const yDistance =
-      this.currentPosition.y -
-      this.tower.projectileParams.dimensions[this.tower.upgradeLevel]
-        .projectileHeight /
+        this.currentPosition.y -
+        this.tower.projectileParams.dimensions[this.tower.upgradeLevel]
+            .projectileHeight /
         2 -
-      (enemy.currentPosition.y + enemy.enemyParams.height! / 2);
+        (enemy.currentPosition.y + enemy.enemyParams.height! / 2);
     if (
-      Math.hypot(xDistance, yDistance) <
-      this.tower.projectileParams.attackModifierRange!
+        Math.hypot(xDistance, yDistance) <
+        this.tower.projectileParams.attackModifierRange!
     ) {
       return true;
     }
@@ -183,8 +183,8 @@ export class Projectile {
     // animate impact
     this.renderParams.isAnimateImpact = true;
     if (
-      this.target!.enemyParams.hp > 0 &&
-      this.tower.engine.enemies!.indexOf(this.target!) > -1
+        this.target!.enemyParams.hp > 0 &&
+        this.tower.engine.enemies!.indexOf(this.target!) > -1
     ) {
       this.target!.enemyParams.hp -= this.damage;
       this.damage = 0;
@@ -196,12 +196,15 @@ export class Projectile {
             this.target!.enemyParams!.modifiedSlowTimer = null;
           }
           if (!this.target?.enemyParams?.isModified) {
+            const slowCoefficient =
+                this.tower.engine.waveGenerator?.waveParams?.waveType === "boss"
+                    ? this.target!.enemyParams!.speed! * 0.15
+                    : this.target!.enemyParams!.speed! *
+                    0.2 *
+                    (this.tower.upgradeLevel + 1);
             this.target!.enemyParams.isModified = true;
             this.target!.enemyParams.attackModifier = "slow";
-            this.target!.enemyParams!.speed! -=
-              this.target!.enemyParams!.speed! *
-              0.2 *
-              (this.tower.upgradeLevel + 1);
+            this.target!.enemyParams!.speed! -= slowCoefficient;
           }
           this.target!.enemyParams!.modifiedSlowTimer = setTimeout(() => {
             // clear timer
@@ -209,7 +212,7 @@ export class Projectile {
             clearTimeout(this.target?.enemyParams?.modifiedSlowTimer!);
             // restore enemy movement speed
             this.target!.enemyParams!.speed =
-              this.target?.enemyParams?.initialSpeed;
+                this.target?.enemyParams?.initialSpeed;
             // restore enemy isModified state to false
             this.target!.enemyParams.isModified = false;
           }, this.tower.projectileParams.attackModifierTimeout);
@@ -231,27 +234,34 @@ export class Projectile {
             }
           });
         } else if (this.tower.projectileParams.attackModifier === "shock") {
-          this.target!.enemyParams.isModified = true;
-          this.target!.enemyParams.attackModifier = "shock";
           // stop enemy
-          this.target!.enemyParams!.speed! = 0;
-          this.target!.enemyParams!.modifiedShockTimer = setTimeout(() => {
-            // clear timer
-            this.target!.enemyParams!.modifiedShockTimer = null;
-            clearTimeout(this.target?.enemyParams?.modifiedShockTimer!);
-            // restore enemy movement speed
-            this.target!.enemyParams!.speed =
-              this.target?.enemyParams?.initialSpeed;
-            // restore enemy isModified state to false
-            this.target!.enemyParams.isModified = false;
-          }, this.tower.projectileParams.attackModifierTimeout);
+          if (
+              this.tower.engine.waveGenerator?.waveParams?.waveType === "boss"
+          ) {
+            // can't stop teh boss
+          } else {
+            this.target!.enemyParams.isModified = true;
+            this.target!.enemyParams.attackModifier = "shock";
+            // but can stop any other wave type
+            this.target!.enemyParams!.speed! = 0;
+            this.target!.enemyParams!.modifiedShockTimer = setTimeout(() => {
+              // clear timer
+              this.target!.enemyParams!.modifiedShockTimer = null;
+              clearTimeout(this.target?.enemyParams?.modifiedShockTimer!);
+              // restore enemy movement speed
+              this.target!.enemyParams!.speed =
+                  this.target?.enemyParams?.initialSpeed;
+              // restore enemy isModified state to false
+              this.target!.enemyParams.isModified = false;
+            }, this.tower.projectileParams.attackModifierTimeout);
+          }
         }
       }
     }
 
     if (
-      this.target!.enemyParams.hp <= 0 &&
-      this.tower.engine.enemies!.indexOf(this.target!) > -1
+        this.target!.enemyParams.hp <= 0 &&
+        this.tower.engine.enemies!.indexOf(this.target!) > -1
     ) {
       // target is dead
       this.target!.renderParams!.currentFrame = 0;
@@ -270,7 +280,8 @@ export class Projectile {
   public destroy() {
     if (!this.tower.engine.projectiles?.length) return;
     this.tower.engine.projectiles = this.tower.engine.projectiles!.filter(
-      (projectile) => this !== projectile,
+        (projectile) => this !== projectile,
     );
   }
 }
+

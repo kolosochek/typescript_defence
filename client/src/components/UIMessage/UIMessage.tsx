@@ -1,10 +1,12 @@
 import { Box, Typography } from "@mui/material";
 import { shallow } from "zustand/shallow";
 import { useGameStore } from "../../store";
-import {ColorDict} from "../../engine/TDEngine";
+import { ColorDict, TDEngine } from "../../engine/TDEngine";
 
-
-export const UiMessage = () => {
+export interface IUiMessage {
+  engine: TDEngine;
+}
+export const UiMessage = ({ engine }: IUiMessage) => {
   const waveType = useGameStore((state) => state.waveType, shallow);
   let waveTypeColor: string = ColorDict.fontColor;
   switch (waveType) {
@@ -35,53 +37,53 @@ export const UiMessage = () => {
   const isGameStarted = useGameStore((state) => state.isGameStarted, shallow);
 
   return (
-      <Box
-          sx={{
-            position: "absolute",
-            left: 0,
-            zIndex: 50,
-            width: "100%",
-            height: "100%",
-            display: "flex",
-            userSelect: "none",
-            "& p": {
-              display: "flex",
-              flexGrow: 1,
-              flexDirection: "column",
-              alignItems: "center",
-              justifyContent: "center",
-              color: "#262626",
-              fontSize: "4em",
-              width: "100%",
-              textAlign: "center",
-            },
-          }}
-      >
-        {!isGameMenuOpen && (Boolean(countdown) || isGameOver) ? (
-            <>
-              {isGameOver ? (
-                  <Typography>GAME IS OVER!</Typography>
-              ) : (
-                  Boolean(countdown) && (
-                      <Typography>
-                        {`Next wave in ${countdown}`}
-                        <br />
-                        <span>
+    <Box
+      sx={{
+        position: "absolute",
+        left: 0,
+        zIndex: engine.canvasZIndex.spellDraft,
+        width: "100%",
+        height: "100%",
+        display: "flex",
+        userSelect: "none",
+        "& p": {
+          display: "flex",
+          flexGrow: 1,
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          color: "#262626",
+          fontSize: "4em",
+          width: "100%",
+          textAlign: "center",
+        },
+      }}
+    >
+      {!isGameMenuOpen && (Boolean(countdown) || isGameOver) ? (
+        <>
+          {isGameOver ? (
+            <Typography>GAME IS OVER!</Typography>
+          ) : (
+            Boolean(countdown) && (
+              <Typography>
+                {`Next wave in ${countdown}`}
+                <br />
+                <span>
                   Type:
                   <span
-                      style={{
-                        color: waveTypeColor,
-                      }}
+                    style={{
+                      color: waveTypeColor,
+                    }}
                   >{`${waveType}`}</span>
                 </span>
-                      </Typography>
-                  )
-              )}
-            </>
-        ) : (
-            !isGameStarted &&
-            !Boolean(countdown) && <Typography>{`Game paused`}</Typography>
-        )}
-      </Box>
+              </Typography>
+            )
+          )}
+        </>
+      ) : (
+        !isGameStarted &&
+        !Boolean(countdown) && <Typography>{`Game paused`}</Typography>
+      )}
+    </Box>
   );
 };

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { CircularProgress, Box, createTheme, Grid } from "@mui/material";
+import {CircularProgress, Box, createTheme, Grid, CssBaseline} from "@mui/material";
 import { shallow } from "zustand/shallow";
 import { ThemeProvider } from "@mui/material/styles";
 import { TDEngine } from "../engine/TDEngine";
@@ -9,11 +9,28 @@ import { SideMenu } from "../components/SideMenu/SideMenu";
 import { BuildMenu } from "../components/BuildMenu/BuildMenu";
 import { GameMenu } from "../components/GameMenu/GameMenu";
 import { UiMessage } from "../components/UIMessage/UIMessage";
+import cursorPointer from "../assets/UI/cursorPointer.png"
 
 
 // mui theme
 const theme = createTheme({
     components: {
+        MuiCssBaseline: {
+            styleOverrides: (themeParam) => ({
+                body: {
+                    height: "100%",
+                    width: "100%",
+                },
+
+            }),
+        },
+        MuiGrid: {
+            styleOverrides: {
+                root: {
+                    minHeight: "100vh",
+                },
+            },
+        },
         MuiMenuItem: {
             styleOverrides: {
                 root: {
@@ -108,12 +125,16 @@ export const Game = ({ engine = new TDEngine() }: IGameProps) => {
     }, [isGameStarted]);
 
     return (
+        <CssBaseline>
         <ThemeProvider theme={theme}>
             <Grid
                 container
                 justifyContent="center"
                 alignItems="center"
                 sx={{
+                    padding: 0,
+                    margin: 0,
+                    cursor: `url("${cursorPointer}"), auto`,
                     position: "relative",
                     "& .b-game-window": {
                         position: "absolute",
@@ -140,10 +161,11 @@ export const Game = ({ engine = new TDEngine() }: IGameProps) => {
                         <SideMenu engine={engine} />
                         <BuildMenu engine={engine} />
                         <GameMenu engine={engine} />
-                        <UiMessage />
+                        <UiMessage engine={engine} />
                     </Box>
                 )}
             </Grid>
         </ThemeProvider>
+        </CssBaseline>
     );
 };

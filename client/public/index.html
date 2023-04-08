@@ -6,11 +6,23 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimal-ui" />
     <title>Tower Defense game</title>
   </head>
   <body>
     <div id="root"><!--ssr-outlet--></div>
+    <style>
+      @media only screen and (min-device-width: 480px){
+        html, body {
+          min-width: 100vh;
+        }
+      }
+      @media only screen and (min-device-height: 480px){
+        html, body {
+          min-width: 100vh;
+        }
+      }
+    </style>
     <script type="module" src="./src/main.tsx"></script>
   </body>
 </html>
