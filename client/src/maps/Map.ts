@@ -440,6 +440,7 @@ export class Map {
 
   public init() {
     return new Promise((resolve, reject) => {
+      if (this.engine.isCanvasCreated) { resolve(`Canvas is already created`)}
       // road sprite
       this.mapSprite = new Image();
       this.mapSprite!.src = this.mapSpritePath;
