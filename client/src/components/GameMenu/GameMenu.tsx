@@ -122,14 +122,17 @@ export const GameMenu = ({ engine }: IGameMenu) => {
           </MenuItem>
             <MenuItem
                 onClick={() => {
-                    if (isFullscreen) {
-                        engine.gameWindow.requestFullscreen();
+                    if (!document.fullscreen) {
+                        document.body.requestFullscreen();
                         setIsFullscreen(true);
+                        setIsGameMenuOpen(false);
                     } else {
                         document.exitFullscreen();
                         setIsFullscreen(false);
+                        setIsGameMenuOpen(false);
                     }
                 }}
+                disabled={!isGameStarted}
             >
                 Fullscreen {isFullscreen ? "off" : "on"}
             </MenuItem>

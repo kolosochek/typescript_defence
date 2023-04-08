@@ -79,7 +79,7 @@ export const useGameStore = create<IGameStore & TGameAction>()((set) => ({
       set(() => ({ constructionProgress: constructionProgress })),
   waveType: "regular",
   updateWaveType: (waveType) => set(() => ({ waveType: waveType })),
-  isFullscreen: true,
+  isFullscreen: false,
   updateIsFullscreen: (isFullscreen) =>
       set(() => ({ isFullscreen: isFullscreen })),
 }));
