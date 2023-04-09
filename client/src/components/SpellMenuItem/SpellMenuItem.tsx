@@ -32,6 +32,8 @@ export const SpellMenuItem = memo(
         }}
         sx={{
           margin: "0px 4px 8px",
+          boxSizing: "content-box",
+            
           "&.state__disabled": {
             opacity: ".7",
           },
@@ -52,7 +54,7 @@ export const SpellMenuItem = memo(
             width: `${engine.predefinedSpellParams[spellType].spell.width}px`,
             height: `${engine.predefinedSpellParams[spellType].spell.height}px`,
             background: `url(${spellIconsSprite}) ${
-              -index * (64)
+              -index * (60)
             }px 0 no-repeat`,
             backgroundSize: "cover",
             border: "2px solid #bd6a62",
