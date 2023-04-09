@@ -939,10 +939,6 @@ export class TDEngine {
         return new Promise((resolve, reject) => {
             if (this.isInitialized) reject();
             this.gameWindow = gameContainer;
-            // debug
-            console.log(`this.gameWindow`);
-            console.log(this.gameWindow);
-            //
             // set map
             this.map = new Map(this);
             /* LOAD SPRITES */

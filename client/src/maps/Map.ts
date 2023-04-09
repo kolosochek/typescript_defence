@@ -123,6 +123,9 @@ export class Map {
 
     // widescreen
     if (this.mapParams.heightTile > 12 && this.mapParams.widthTile > 16) {
+      // debug
+      console.log(`widescreen width`);
+      //
       this.mapParams.width = this.mapParams.widthTile * this.mapParams.gridStep;
       this.mapParams.height = this.mapParams.heightTile * this.mapParams.gridStep;
 
@@ -232,8 +235,13 @@ export class Map {
       ];
     } else {
       // tablet
-      this.mapParams.width = 16 * this.mapParams.gridStep;
-      this.mapParams.height = 12 * this.mapParams.gridStep;
+      // debug
+      console.log(`tablet and phone width`);
+      //
+      this.mapParams.widthTile = 16;
+      this.mapParams.heightTile = 12;
+      this.mapParams.width = this.mapParams.widthTile * this.mapParams.gridStep;
+      this.mapParams.height = this.mapParams.heightTile * this.mapParams.gridStep;
 
       // set map stage stack
       this.stageArrStack = [
