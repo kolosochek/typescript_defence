@@ -123,8 +123,8 @@ export class Map {
 
     // widescreen
     if (this.mapParams.heightTile > 12 && this.mapParams.widthTile > 16) {
-      this.mapParams.width = 28 * this.mapParams.gridStep;
-      this.mapParams.height = 15 * this.mapParams.gridStep;
+      this.mapParams.width = this.mapParams.widthTile * this.mapParams.gridStep;
+      this.mapParams.height = this.mapParams.heightTile * this.mapParams.gridStep;
 
       // set map stage stack
       this.stageArrStack = [

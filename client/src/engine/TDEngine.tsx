@@ -5,7 +5,7 @@ import { Projectile } from "../projectiles/Projectile";
 import { Sound } from "../sound/Sound";
 import { useGameStore as gameStore } from "../store";
 import { ISpell, Spell } from "../spells/Spell";
-import {WaveGenerator} from "../waveGenerator/waveGenerator";
+import { WaveGenerator } from "../waveGenerator/waveGenerator";
 
 // utilities declaration
 export type TPartialRecord<K extends keyof any, T> = {
