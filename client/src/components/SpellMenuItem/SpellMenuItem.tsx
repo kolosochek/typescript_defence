@@ -33,7 +33,7 @@ export const SpellMenuItem = memo(
         sx={{
           margin: "0px 4px 8px",
           boxSizing: "content-box",
-            
+
           "&.state__disabled": {
             opacity: ".7",
           },
