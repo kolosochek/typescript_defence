@@ -1,6 +1,6 @@
 import { Box, Stack } from "@mui/material";
 import { TDEngine, TSpellTypes } from "../../engine/TDEngine";
-import { SpellMenuItem } from "../../components/SpellMenuItem/SpellMenuItem";
+import { SpellMenuItem } from "../SpellMenuItem/SpellMenuItem";
 export interface ISpellMenu {
   engine: TDEngine;
 }

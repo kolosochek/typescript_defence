@@ -1,10 +1,10 @@
 import { Box, Typography } from "@mui/material";
 import { shallow } from "zustand/shallow";
 import sidePanelBg from "../../assets/UI/sidePanelBg.png";
-import { TDEngine, TTowerTypes } from "../../engine/TDEngine";
-import { BuildMenuTower } from "../../components/BuildMenuTower/BuildMenuTower";
+import { ColorDict, TDEngine, TTowerTypes } from "../../engine/TDEngine";
+import { BuildMenuTower } from "../BuildMenuTower/BuildMenuTower";
 import { useGameStore } from "../../store";
-import { SpellMenu } from "../../components/SpellMenu/SpellMenu";
+import { SpellMenu } from "../SpellMenu/SpellMenu";
 import cursorHand from "../../assets/UI/cursorHand.png";
 
 interface IBuildMenu {
@@ -23,8 +23,10 @@ export const BuildMenu = ({ engine }: IBuildMenu) => {
     <Box
       sx={{
         display: isGameStarted ? "flex" : "none",
-        zIndex: 100,
+        zIndex: 101,
         position: "absolute",
+        overflowX: "auto",
+        overflowY: "hidden",
         width: "100%",
         height: `${engine.map?.tileToNumber(4)}px`,
         left: 0,
@@ -45,6 +47,9 @@ export const BuildMenu = ({ engine }: IBuildMenu) => {
           flexDirection: "row",
           width: "100%",
           justifyContent: "center",
+          overflowX: "auto",
+          overflowY: "hidden",
+          paddingLeft: `${engine.viewport !== "widescreen" ? "186px" : "0"}`,
           fontFamily: "'Press Start 2P', cursive",
         }}
         className="b-tower-build-menu-item"
@@ -85,7 +90,7 @@ export const BuildMenu = ({ engine }: IBuildMenu) => {
             height: "32px",
             textAlign: "center",
             fontSize: "1.5em",
-            color: "#262626",
+            color: ColorDict.fontColor,
           },
         }}
       >

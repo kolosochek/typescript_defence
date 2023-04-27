@@ -1,15 +1,19 @@
 import React, { useState } from "react";
 import { Box, MenuItem, MenuList } from "@mui/material";
 import { shallow } from "zustand/shallow";
+import { useNavigate } from "react-router-dom";
 import { useGameStore } from "../../store";
 import { TDEngine } from "../../engine/TDEngine";
 import wispAnimation from "../../assets/UI/wispAnimation.gif";
 import cursorHand from "../../assets/UI/cursorHand.png";
+import grassBg from "../../assets/UI/grassBg.png";
+import {ApplicationRoutes} from "../../index";
 
 interface IGameMenu {
   engine: TDEngine;
 }
 export const GameMenu = ({ engine }: IGameMenu) => {
+  const navigate = useNavigate();
   const isGameMenuOpen = useGameStore((state) => state.isGameMenuOpen, shallow);
   const setIsGameMenuOpen = useGameStore(
     (state) => state.updateIsGameMenuOpen,
@@ -39,7 +43,7 @@ export const GameMenu = ({ engine }: IGameMenu) => {
         top: 0,
         width: "100%",
         height: "100%",
-        background: `url("${engine.map?.grassBackrgroundCanvas?.toDataURL()}") repeat`,
+        background: `url("${grassBg}") repeat`,
         justifyContent: "center",
       }}
     >
@@ -117,6 +121,15 @@ export const GameMenu = ({ engine }: IGameMenu) => {
             disabled={!isGameStarted}
           >
             {isSoundEnabled ? "Disable" : "Enable"} music
+          </MenuItem>
+          <MenuItem
+            onClick={() => {
+              engine.isInitialized = false;
+              engine.isCanvasCreated = false;
+              navigate(ApplicationRoutes.home);
+            }}
+          >
+            Main page
           </MenuItem>
         </MenuList>
       </Box>

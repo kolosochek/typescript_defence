@@ -5,6 +5,7 @@ import cursorHand from "../../assets/UI/cursorHand.png";
 import sidePanelBg from "../../assets/UI/sidePanelBg.png";
 import { ColorDict, TDEngine } from "../../engine/TDEngine";
 import { useGameStore } from "../../store";
+import {TProjectileAttackModifiers} from "../../towers/Tower";
 
 const percentToProgressBarString = (percent: number) => {
   const progress = Math.floor(percent / 10);
@@ -137,7 +138,7 @@ export const SideMenu = ({ engine }: ISideMenu) => {
                       Attack range:{" "}
                       <Box component="span">{`${selectedTower?.towerParams?.attackRange}`}</Box>
                     </Typography>
-                    {selectedTower?.projectileParams?.attackModifier && (
+                    {selectedTower?.projectileParams?.attackModifier! && (
                       <>
                         <Typography>
                           Special:
@@ -145,12 +146,10 @@ export const SideMenu = ({ engine }: ISideMenu) => {
                             component="span"
                             sx={{
                               color:
-                                ColorDict[
-                                  `specialAttack${selectedTower?.projectileParams?.attackModifier}Color`
-                                ] + " !important",
+                                ColorDict[`specialAttack${selectedTower?.projectileParams?.attackModifier as TProjectileAttackModifiers}Color`] + " !important",
                             }}
                           >
-                            {selectedTower?.projectileParams?.attackModifier}
+                            {selectedTower?.projectileParams?.attackModifier!}
                           </Box>
                         </Typography>
                         {selectedTower?.projectileParams
@@ -161,14 +160,12 @@ export const SideMenu = ({ engine }: ISideMenu) => {
                               component="span"
                               sx={{
                                 color:
-                                  ColorDict[
-                                    `specialAttack${selectedTower?.projectileParams?.attackModifier}Color`
-                                  ] + " !important",
+                                  ColorDict[`specialAttack${selectedTower?.projectileParams?.attackModifier as TProjectileAttackModifiers}Color`] + " !important",
                               }}
                             >
                               {
                                 selectedTower?.projectileParams
-                                  ?.attackModifierTimeout
+                                  ?.attackModifierTimeout!
                               }
                             </Box>
                           </Typography>
@@ -181,14 +178,29 @@ export const SideMenu = ({ engine }: ISideMenu) => {
                               component="span"
                               sx={{
                                 color:
-                                  ColorDict[
-                                    `specialAttack${selectedTower?.projectileParams?.attackModifier}Color`
-                                  ] + " !important",
+                                  ColorDict[`specialAttack${selectedTower?.projectileParams?.attackModifier as TProjectileAttackModifiers}Color`] + " !important",
                               }}
                             >
                               {
                                 selectedTower?.projectileParams
-                                  ?.attackModifierRange
+                                  ?.attackModifierRange!
+                              }
+                            </Box>
+                          </Typography>
+                        )}
+                        {selectedTower?.projectileParams?.attackModifierDPS && (
+                          <Typography>
+                            Poison DPS:
+                            <Box
+                              component="span"
+                              sx={{
+                                color:
+                                  ColorDict[`specialAttack${selectedTower?.projectileParams?.attackModifier as TProjectileAttackModifiers}Color`] + " !important",
+                              }}
+                            >
+                              {
+                                selectedTower?.projectileParams
+                                  ?.attackModifierDPS!
                               }
                             </Box>
                           </Typography>

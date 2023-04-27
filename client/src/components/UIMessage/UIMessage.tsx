@@ -35,6 +35,7 @@ export const UiMessage = ({ engine }: IUiMessage) => {
   const countdown = useGameStore((state) => state.countdown, shallow);
   const isGameMenuOpen = useGameStore((state) => state.isGameMenuOpen, shallow);
   const isGameStarted = useGameStore((state) => state.isGameStarted, shallow);
+  const UIMessage = useGameStore((state) => state.UIMessage, shallow);
 
   return (
     <Box
@@ -52,14 +53,22 @@ export const UiMessage = ({ engine }: IUiMessage) => {
           flexDirection: "column",
           alignItems: "center",
           justifyContent: "center",
-          color: "#262626",
+          color: ColorDict.fontColor,
           fontSize: "4em",
           width: "100%",
           textAlign: "center",
         },
       }}
     >
-      {!isGameMenuOpen && (Boolean(countdown) || isGameOver) ? (
+      {!isGameMenuOpen && UIMessage ? (
+        <Typography
+          sx={{
+            color: "red !i",
+          }}
+        >
+          {UIMessage}
+        </Typography>
+      ) : !isGameMenuOpen && (Boolean(countdown) || isGameOver) ? (
         <>
           {isGameOver ? (
             <Typography>GAME IS OVER!</Typography>

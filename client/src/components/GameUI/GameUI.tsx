@@ -117,12 +117,13 @@ export const GameUi = ({ engine }: IGameUI) => {
             className="b-game-status"
             sx={{
               "& .status-icon": {
+                textShadow: "2px 2px white",
                 paddingLeft: "36px",
+                paddingTop: "10px",
                 marginBottom: "16px",
               },
 
               "& .status-icon p": {
-                  paddingTop: "10px",
                 minWidth: "22px",
                 color: "#262626",
                 textAlign: "center",
