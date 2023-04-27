@@ -126,7 +126,7 @@ export function Home({ engine }: IHome) {
             left: 0,
             top: 0,
             background: ColorDict.shadowColor,
-            opacity: 0.2,
+            opacity: 0.75,
           },
           "& .b-text-background": {
             border: `4px solid ${ColorDict.borderColor}`,

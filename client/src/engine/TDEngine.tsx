@@ -599,7 +599,7 @@ export class TDEngine {
         framesPerSprite: 8,
         deathFramesPerSprite: 11,
         description:
-          "обычный враг, средняя скорость, средний показатель здоровья",
+          "regular enemy, average speed, average health",
       },
       leafbug: {
         spriteSourcePath: "leafbugSprite.png",
@@ -612,7 +612,7 @@ export class TDEngine {
         spriteDownRow: 4,
         framesPerSprite: 8,
         deathFramesPerSprite: 8,
-        description: "скорость ниже среднего, увеличенное количество здоровья",
+        description: "speed is below average, increased health",
       },
       magmacrab: {
         spriteSourcePath: "magmacrabSprite.png",
@@ -626,7 +626,7 @@ export class TDEngine {
         framesPerSprite: 8,
         deathFramesPerSprite: 10,
         description:
-          "обычный враг, средняя скорость, средний показатель здоровья",
+          "common enemy, average speed, average health",
       },
       clampbeetle: {
         spriteSourcePath: "clampbeetleSprite.png",
@@ -640,7 +640,7 @@ export class TDEngine {
         framesPerSprite: 8,
         deathFramesPerSprite: 13,
         description:
-          "бронированный враг. здоровье выше среднего, все остальные параметры средние",
+          "armored enemy. health is above average, all other parameters are average",
       },
       firelocust: {
         spriteSourcePath: "firelocustSprite.png",
@@ -654,7 +654,7 @@ export class TDEngine {
         framesPerSprite: 12,
         deathFramesPerSprite: 14,
         description:
-          "быстрый враг. больше скорость перемещения, меньше здоровья",
+          "fast enemy. more movement speed, less health",
       },
       butterfly: {
         spriteSourcePath: "butterflySprite.png",
@@ -667,7 +667,7 @@ export class TDEngine {
         spriteDownRow: 4,
         framesPerSprite: 8,
         deathFramesPerSprite: 12,
-        description: "самый быстрый враг. здоровье значительно ниже среднего",
+        description: "the fastest enemy. well below average health",
       },
       scorpion: {
         spriteSourcePath: "scorpionSprite.png",
@@ -680,7 +680,7 @@ export class TDEngine {
         spriteRightRow: 6,
         framesPerSprite: 8,
         deathFramesPerSprite: 8,
-        description: "босс. много здоровья, сопротивление магическим эффектам",
+        description: "boss. a lot of health, resistance to magic effects",
       },
     },
     public predefinedSpellParams: ITDEngine["predefinedSpellParams"] = {
@@ -689,7 +689,7 @@ export class TDEngine {
           framesPerSprite: 10,
           width: 64,
           height: 64,
-          description: `Огненный шар - поражает врагов в небольшой области, быстро летит и наносит средний урон`,
+          description: `Fireball - hits enemies in a small area, flies fast and deals medium damage`,
         },
         impact: {
           framesPerSprite: 13,
@@ -709,7 +709,7 @@ export class TDEngine {
           framesPerSprite: 10,
           width: 64,
           height: 64,
-          description: `Ураган - наносит небольшой урон и заметно замедляет противников в небольшой области. Мгновенное применение`,
+          description: `Hurricane - deals small damage and noticeably slows down opponents in a small area.`,
         },
         impact: {
           framesPerSprite: 9,
@@ -732,7 +732,7 @@ export class TDEngine {
           framesPerSprite: 10,
           width: 64,
           height: 64,
-          description: `Водопад - медленно летит, наносит небольшой урон и надолго, но незначительно замедляет врагов в большой области`,
+          description: `Waterfall - flies slowly, deals low damage for a long time, but slightly slows down enemies in a large area`,
         },
         impact: {
           framesPerSprite: 5,
@@ -755,7 +755,7 @@ export class TDEngine {
           framesPerSprite: 10,
           width: 64,
           height: 64,
-          description: `Камнепад, который надолго оглушает врагов в очень маленькой области и наносит небольшой урон`,
+          description: `A rockfall that permanently stuns enemies in a very small area and deals low damage`,
         },
         impact: {
           framesPerSprite: 5,
@@ -813,7 +813,7 @@ export class TDEngine {
           maxUpgradeLevel: 2,
           price: 25,
           description:
-            "Средняя скорость атаки, но с средний урон башни со стрелами. Средний радиус атаки.",
+            "Average attack speed, but with average arrow tower damage. Medium attack range",
         },
         projectileParams: {
           acceleration: 1.5,
@@ -882,7 +882,7 @@ export class TDEngine {
           maxUpgradeLevel: 2,
           price: 35,
           description:
-            "Быстрые, но наносящие мало урона башни с молнией. Оглушают врага на короткий промежуток времени. Радиус атаки меньше среднего.",
+            "Fast but low damage lightning towers. Stun the enemy for a short period of time. Attack radius is less than average",
         },
         projectileParams: {
           acceleration: 1.2,
@@ -953,7 +953,7 @@ export class TDEngine {
           maxUpgradeLevel: 2,
           price: 55,
           description:
-            "Cредние по скорости атаки, но отравляющие врагов башни с рогаткой. Радиус атаки больше среднего.",
+            "Medium attack speed, but towers with a slingshot that poison enemies. The attack radius is above average",
         },
         projectileParams: {
           acceleration: 1.2,
@@ -1022,7 +1022,7 @@ export class TDEngine {
           maxUpgradeLevel: 2,
           price: 65,
           description:
-            "Медленные, но атакующие сплешем (всех врагов в небольшом радиусе) башни с молотом. Маленький радиус атаки.",
+            "Slow, but splash attacking (all enemies in a small radius) towers with a hammer. Small attack radius. Damage is above average",
         },
         projectileParams: {
           acceleration: 1.2,
@@ -1091,7 +1091,7 @@ export class TDEngine {
           maxUpgradeLevel: 2,
           price: 55,
           description:
-            "Магическая башня с рунами. Произносит случайное заклинание с увеличенным уроном по цели в радиусе действия башни.",
+            "Magic tower with runes. Casts a random spell with increased damage against a target within the turret's range",
         },
         projectileParams: {
           acceleration: 1.2,
@@ -1159,7 +1159,7 @@ export class TDEngine {
           maxUpgradeLevel: 2,
           price: 45,
           description:
-            "Дальнобойные башни с быстрой скоростью полета снаряда, обычный урон",
+            "Long range turrets with fast projectile speed, normal damage",
         },
         projectileParams: {
           acceleration: 2,
@@ -1226,7 +1226,7 @@ export class TDEngine {
           maxUpgradeLevel: 2,
           price: 145,
           description:
-            "Очень медленные, но самые дальнобойные башни с большим сплешем",
+            "Very slow, but the longest ranged towers with a large splash and huge damage",
         },
         projectileParams: {
           acceleration: 1.2,
@@ -1296,7 +1296,7 @@ export class TDEngine {
           maxUpgradeLevel: 2,
           price: 65,
           description:
-            "Средняя скорость атаки, небольшой урон, поражает цели ядом, который наносит урон в течении времени",
+            "Medium attack speed, low damage, hits targets with poison that deals damage over time",
         },
         projectileParams: {
           acceleration: 1.5,
