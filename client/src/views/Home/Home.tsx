@@ -67,11 +67,6 @@ export function Home({ engine }: IHome) {
             engine.startDemo();
 
             // debug
-            console.log(`document.body.clientHeight`);
-            console.log(document.body.clientHeight);
-            //
-
-            // debug
             console.log(`engine`);
             console.log(engine);
             //

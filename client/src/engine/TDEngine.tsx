@@ -1377,23 +1377,6 @@ export class TDEngine {
         this.isTowerSpritesLoaded = true;
       }
 
-      // map sprites
-      this.map
-        .init()
-        .then(() => {
-          this.createCanvas(gameContainer)
-            .then(() => {
-              Promise.all(this.promiseArr).then(() => {
-                resolve(`Canvas stack has been created!`);
-              });
-            })
-            .catch((e) => {
-              reject(`Can't create canvas stack! Reason: ${e.reason ?? e}`);
-            });
-        })
-        .catch(reject);
-      // we need just tower and map sprites, all other can be loaded in the future
-
       // enemy sprites
       if (!this.isEnemySpritesLoaded!) {
         for (const [enemyType] of Object.entries(this.enemySprites)) {
@@ -1409,6 +1392,22 @@ export class TDEngine {
         this.isSpellSpritesLoaded = true;
       }
       /* /LOAD SPRITES */
+
+      // map sprites
+      this.map
+        .init()
+        .then(() => {
+          this.createCanvas(gameContainer)
+            .then(() => {
+              Promise.all(this.promiseArr).then(() => {
+                resolve(`Canvas stack has been created!`);
+              });
+            })
+            .catch((e) => {
+              reject(`Can't create canvas stack! Reason: ${e.reason ?? e}`);
+            });
+        })
+        .catch(reject);
     });
   }
 
