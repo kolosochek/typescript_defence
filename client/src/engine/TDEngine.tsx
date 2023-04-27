@@ -1724,6 +1724,7 @@ export class TDEngine {
     this.demoTimeoutArr = [];
     this.draftSpell = null;
     this.draftTower = null;
+    this.promiseArr = [];
   }
 
   public gameRestart() {
@@ -2988,6 +2989,7 @@ export class TDEngine {
   };
 
   public upgradeTower(tower: Tower) {
+    if (!tower.upgradeLevel) return;
     // max upgrade level check
     if (tower.upgradeLevel === tower.towerParams.maxUpgradeLevel!) return;
     if (
