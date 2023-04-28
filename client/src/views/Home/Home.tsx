@@ -228,7 +228,6 @@ export function Home({engine}: IHome) {
                                 flexDirection: "column",
                                 justifyContent: "center",
                             }}
-                            id="rules"
                         >
                             <>
                                 <Typography
@@ -238,8 +237,9 @@ export function Home({engine}: IHome) {
                                         color: "#FFC08B",
                                         textAlign: "center",
                                     }}
+                                    id="rules"
                                 >
-                                    How to play
+                                    Game rules
                                 </Typography>
                                 <Box className="b-text-background">
                                     <Typography
@@ -417,15 +417,15 @@ export function Home({engine}: IHome) {
                                         textAlign: "center",
                                         margin: "60px 0 60px 128px",
                                     }}
-                                >
-                                    Game rules:
+                                    id="howtoplay">
+                                    How to play:
                                 </Typography>
                                 <Box className="b-text-background" sx={{
                                     "& h5": {
                                         padding: "0 0 40px",
                                         textAlign: "left",
                                     }
-                                }} id="howtoplay">
+                                }}>
                                     <Typography
                                         variant="h5"
                                     >
