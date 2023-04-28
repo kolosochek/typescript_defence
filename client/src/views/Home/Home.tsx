@@ -138,6 +138,15 @@ export function Home({engine}: IHome) {
                     "& h4": {
                         color: ColorDict.sandColor,
                     },
+                    "& .text-highlight-red": {
+                        color: "red",
+                    },
+                    "& .text-highlight-green": {
+                        color: "green",
+                    },
+                    "& .text-highlight-blue": {
+                        color: "blue",
+                    },
                 }}
             >
                 <>
@@ -235,14 +244,14 @@ export function Home({engine}: IHome) {
                                 <Box className="b-text-background">
                                     <Typography
                                         variant="h5"
-                                        sx={{
-                                            textAlign: "left",
-                                        }}
                                     >
-                                        Tower defense game. The goal of the game is to stop the monsters,
-                                        by building towers and casting spells. For the kill
-                                        monsters the player receives money that can be spent on
-                                        improving towers improving existing ones.
+                                        Tower defense game. The goal of the game is to <span className="text-highlight-red">stop the monsters</span>,
+                                        by <span className="text-highlight-green">building towers</span> and <span
+                                        className="text-highlight-blue">cast spells</span>.
+                                    </Typography>
+                                    <br />
+                                    <Typography variant="h5">
+                                        You can earn money by killing enemies and spend money by <span className="text-highlight-green">building and upgrading</span> towers.
                                     </Typography>
                                 </Box>
                                 <Typography
@@ -420,34 +429,33 @@ export function Home({engine}: IHome) {
                                     <Typography
                                         variant="h5"
                                     >
-                                        1. Build and upgrade towers. Combo tower special attacks.
+                                        1. <span className="text-highlight-red">Build</span> and <span className="text-highlight-green">upgrade</span> towers. <span style={{ color: ColorDict.specialAttackfreezeColor}}>Combo</span> <span style={{ color: ColorDict.specialAttackslowColor}}>tower</span> <span style={{ color: ColorDict.specialAttackshockColor}}>special</span> <span style={{ color: ColorDict.specialAttackpoisonColor}}>attacks</span>.
                                     </Typography>
                                     <Typography
                                         variant="h5"
                                     >
-                                        2. Cast spells and watch your mana. Try to slow down enemies, no to kill 'em.
+                                        2. <span style={{ color: ColorDict.spellRangeColor}} >Cast spells</span> and watch your mana. Try to slow down enemies, no to kill 'em.
                                     </Typography>
                                     <Typography
                                         variant="h5"
                                     >
-                                        3. Clear trees and stones in good spots, like road corners, so towers can cover
+                                        3. <span style={{color: ColorDict.specialAttackslowColor}}>Clear trees and stones</span>(C button on keyboard) in good spots, like road corners, so towers can cover
                                         more area.
                                     </Typography>
                                     <Typography
                                         variant="h5"
                                     >
-                                        4. Use hotkeys! 1-8 on keyboard for towers, Q-W-E-R for spells!
+                                        4. Use hotkeys! <span className="text-highlight-green">1-8 on keyboard for towers</span>, <span className="text-highlight-blue">Q-W-E-R for spells</span>!
                                     </Typography>
                                     <Typography
                                         variant="h5"
                                     >
-                                        4. Don't give up!
+                                        5. <span className="text-highlight-red">Don't give up!</span>
                                     </Typography>
                                     <Typography
                                         variant="h5"
                                     >
-                                        After the start of the game, after a while, they will start walking on the map
-                                        enemies. You need to build towers that will attack enemies and
+                                        After game start, enemies will start walking down the road. You need to <span className="text-highlight-green">build towers</span> and <span className="text-highlight-blue">cast spells</span> that will attack enemies and
                                         prevent them from reaching the end of the map.
                                     </Typography>
                                     <Typography
