@@ -1,15 +1,16 @@
 # Typescript defence
 ## https://typescriptdefence.netlify.app/
 ### Ultimate tower defence game engine
-![gameplay_screenshot](https://raw.githubusercontent.com/kolosochek/typescript_defence/main/github/images/gameplay_screenshot.png)
+
+[![Short_gameplay](https://raw.githubusercontent.com/kolosochek/typescript_defence/main/github/images/gameplay_player.png)](https://www.youtube.com/watch?v=3DtMyarx1EA)
 ![homepage_top](https://raw.githubusercontent.com/kolosochek/typescript_defence/main/github/images/homepage_top.png)
 ![homepage_rules](https://raw.githubusercontent.com/kolosochek/typescript_defence/main/github/images/homepage_rules.png)
 ![homepage_howtoplay](https://raw.githubusercontent.com/kolosochek/typescript_defence/main/github/images/homepage_howtoplay.png)
+![homepage_screenshot](https://raw.githubusercontent.com/kolosochek/typescript_defence/main/github/images/gameplay_screenshot.png)
 Build and upgrade towers, cast spells to stop multiple wave monster hordes.
 Unique game experience, procedure generated map for each session, randomized game params.
 
-[![Short_gameplay](https://raw.githubusercontent.com/kolosochek/typescript_defence/main/github/images/gameplay_video_frame.png)](https://raw.githubusercontent.com/kolosochek/typescript_defence/main/github/images/gameplay_small.webm)
-[![Long_gameplay](https://raw.githubusercontent.com/kolosochek/typescript_defence/main/github/images/gameplay_video_frame.png)](https://raw.githubusercontent.com/kolosochek/typescript_defence/main/github/images/gameplay_long.webm)
+
 
 #### What is **typescript_defence**?
 This is a classic tower defence game with few custom mechanics: spells, map obstacles, wave modifiers and so on.
