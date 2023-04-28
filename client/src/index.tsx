@@ -32,6 +32,7 @@ root.render(
                 <Routes>
                     <Route path={ApplicationRoutes.game} element={<Game engine={engine}/>}/>
                     <Route path={ApplicationRoutes.home} element={<Home engine={engine}/>}/>
+                    <Route path="*" element={<Home engine={engine}/>}/>
                 </Routes>
             </Box>
         </CssBaseline>
