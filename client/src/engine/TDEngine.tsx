@@ -273,7 +273,7 @@ export class TDEngine {
     public isCheatMode: ITDEngine["boolean"] = false,
     public isNotEnoughMoney: ITDEngine["boolean"] = false,
     public isNotEnoughMana: ITDEngine["boolean"] = false,
-    public isSoundEnabled: ITDEngine["boolean"] = true,
+    public isSoundEnabled: ITDEngine["boolean"] = false,
     public draftSpell: ITDEngine["draftSpell"] = null,
     public randomSpell: ITDEngine["draftSpell"] = null,
     public draftTower: ITDEngine["draftTower"] = null,
@@ -2989,7 +2989,6 @@ export class TDEngine {
   };
 
   public upgradeTower(tower: Tower) {
-    if (!tower.upgradeLevel) return;
     // max upgrade level check
     if (tower.upgradeLevel === tower.towerParams.maxUpgradeLevel!) return;
     if (
