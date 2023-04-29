@@ -445,7 +445,7 @@ export function Home({engine}: IHome) {
                                     <Typography
                                         variant="h5"
                                     >
-                                        4. Use hotkeys! <span className="text-highlight-green">1-8 on keyboard for towers</span>, <span className="text-highlight-blue">Q-W-E-R for spells</span>!
+                                        4. Use hotkeys! <br /><span className="text-highlight-green">1-8 on keyboard for towers</span>, <br /><span className="text-highlight-blue">Q-W-E-R for spells</span>!
                                     </Typography>
                                     <Typography
                                         variant="h5"
